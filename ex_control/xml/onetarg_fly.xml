@@ -1,0 +1,46 @@
+<stimulus name="onetarg_fly" repeats="5000" ex="ex_onetarg" bgColor="128 128 128">
+    <conditions type="grating" runline="stimLength orientation phase spatial temporal centerx centery aperture contrast">
+        <stimLength>
+            <value>10</value>
+        </stimLength>
+        <orientation>
+            <value>0</value>
+        </orientation>
+        <phase>
+            <value>0</value>
+        </phase>
+        <spatial>
+            <value>.0481</value>
+        </spatial>
+        <temporal>
+            <value>3.25</value>
+        </temporal>
+        <centerx>
+            <value>[-100 100]</value>
+        </centerx>
+        <centery>
+            <value>[-100 100]</value>
+        </centery>        
+        <aperture>
+            <value>50</value>
+        </aperture>        
+        <contrast>
+            <value>0.2</value>
+        </contrast>
+    </conditions>
+    <params>
+        <timeToFix>1500</timeToFix>
+        <saccadeTime>800</saccadeTime>
+        <stayOnTarget>160</stayOnTarget>
+        <fixColor>[255 0 100]</fixColor>
+        <timeoutMS>2000</timeoutMS>        
+        <saccadeLength>100</saccadeLength>        
+        <fixXjump>50</fixXjump>    
+        <fixYjump>50</fixYjump>    
+    </params>
+    <randoms>
+        <preStimFix>800:50:1000</preStimFix>
+        <fixXpos>0</fixXpos>
+        <fixYpos>0</fixYpos>
+    </randoms>
+</stimulus>

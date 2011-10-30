@@ -1,0 +1,44 @@
+
+/* Include files */
+#include <windows.h>
+#include <stdio.h>
+#include <conio.h>
+#include "cbw.h"
+#include "mex.h"   //--This one is required
+
+void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
+{
+    static WORD * ADData;
+    static int boardNum = 0;
+    static int samples = 30000;
+    static long rate = 1000;
+    static int gain = BIP5VOLTS;
+    static int allocated = 0;
+    int *i;
+
+    int ULStat;
+    unsigned options;
+        
+    if (!ADData)
+    {
+        ADData = (WORD*)cbWinBufAlloc(samples);
+        options = CONVERTDATA + BACKGROUND + CONTINUOUS + SINGLEIO;
+    
+        mexPrintf("%p",ADData);
+    
+        ULStat = cbStopBackground(boardNum,AIFUNCTION);
+        ULStat = cbAInScan (boardNum, 0, 2, samples, &rate, gain, ADData, options);
+        return;
+    }
+        
+    options = CONVERTDATA + BACKGROUND + CONTINUOUS + SINGLEIO;
+    
+    mexPrintf("%p",ADData);
+    
+    ULStat = cbStopBackground(boardNum,AIFUNCTION);
+    ULStat = cbAInScan (boardNum, 0, 2, samples, &rate, gain, ADData, options);
+}
+        
+
+
+

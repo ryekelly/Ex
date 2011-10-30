@@ -1,0 +1,35 @@
+<stimulus name="memWithfefDots" repeats="40" ex="ex_memoryGuidedSaccadePlusStim" bgColor="0 0 0">
+    <conditions>
+        <distance>
+            <value>171</value>
+        </distance>
+        <angle>
+            <value>0:45:315</value>
+        </angle>
+        <size>
+            <value>15</value>
+        </size>
+    </conditions>
+    <params>
+        <targetColor>[255 0 100]</targetColor>
+        <timeToFix>1000</timeToFix>
+        <fixDuration>1100</fixDuration>
+        <targetDuration>50</targetDuration>
+        <noFixTimeout>1000</noFixTimeout>
+        <targetOnsetDelay>200</targetOnsetDelay>
+        <saccadeTime>500</saccadeTime>
+        <stayOnTarget>150</stayOnTarget>
+        
+        <ndots>1</ndots>
+        <dotsize>10</dotsize>
+        <dwell>15</dwell>
+        <centerx>0</centerx>
+        <centery>0</centery>
+        <xradius>512</xradius>
+        <yradius>384</yradius>
+        <colorFEF>[255 255 255]</colorFEF>
+    </params>
+    <randoms>
+        <seed>1:100</seed>
+    </randoms>
+</stimulus>

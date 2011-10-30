@@ -1,0 +1,42 @@
+
+/* Include files */
+#include <windows.h>
+#include <stdio.h>
+#include <conio.h>
+#include "cbw.h"
+#include "mex.h"   //--This one is required
+
+void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
+{
+    int boardNum = 0;
+    int samples = 5000;
+    int ULStat;
+    char ErrMsg[ERRSTRLEN];
+    int gain = BIP5VOLTS;
+    static WORD ADData[5000];
+    float chA, chB;
+    long rate = 1000;
+    unsigned options;
+    int i;
+    double * out;
+    
+    
+    
+    
+    
+    ULStat = cbAInScan (boardNum, 0, 0, samples, &rate, gain, ADData, options);
+    
+    plhs[0] = mxCreateDoubleMatrix(1,samples,mxREAL);
+    out = mxGetPr(plhs[0]);
+    
+    for (i = 0; i < samples; i++)
+    {
+        ULStat = cbToEngUnits32 (boardNum, gain, ADData[i], out + i);
+    }
+    
+    ULStat = cbStopBackground(boardNum,AIFUNCTION);
+}
+        
+
+
+

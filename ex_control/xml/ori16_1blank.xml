@@ -1,0 +1,52 @@
+<stimulus name="orituning" repeats="40" ex="ex_activeFixation" bgColor="0 0 0">
+    <conditions type="grating" runline="stimLength orientation phase spatial temporal centerx centery radius">
+        <phase>
+            <value>0</value>
+        </phase>
+        <temporal>
+            <value>6.25</value>
+        </temporal>
+        <orientation>
+            <value>0</value>
+            <value>22.5</value>
+            <value>45</value>
+            <value>67.5</value>
+            <value>90</value>
+            <value>112.5</value>
+            <value>135</value>
+            <value>157.5</value>
+            <value>180</value>
+            <value>202.5</value>
+            <value>225</value>
+            <value>247.5</value>
+            <value>270</value>
+            <value>292.5</value>
+            <value>315</value>
+            <value>337.5</value>
+        </orientation>
+        <spatial>
+            <value>.0481</value>
+        </spatial>
+        <stimLength>
+            <value>100</value>
+        </stimLength>
+        <centerx>
+            <value>32</value>
+        </centerx>
+        <centery>
+            <value>43</value>
+        </centery>        
+        <radius>
+            <value>20</value>
+        </radius>
+    </conditions>
+    <conditions type="blank" runline="stimLength">
+        <stimLength>
+            <value>100</value>
+        </stimLength>
+    </conditions>
+    <params>
+        <timeToFix>1000</timeToFix>
+        <saccadeTime>600</saccadeTime>
+    </params>
+</stimulus>

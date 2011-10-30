@@ -1,0 +1,8 @@
+function startHistogram()
+    global ai params codes
+
+    if params.getSpikes
+        sendCode(codes.START_HISTOGRAM);
+        start(ai);
+    end
+end

@@ -1,0 +1,23 @@
+function stopHistogram(cnd)
+    global ai trialSpikes params
+
+    if params.getSpikes
+        stop(ai);
+        
+        if nargin > 0 
+            if get(ai,'SamplesAvailable') > 0
+                data = getdata(ai,get(ai,'SamplesAvailable'));
+                trialSpikes{cnd}{end+1} = find(diff(data>params.spikeThreshold)==1);
+            else
+                trialSpikes{cnd}{end+1} = [];
+            end
+            
+            endHist = find(trialCodes{cnd}{end}(:,1) == codes.STOP_HISTOGRAM);
+    
+            if sum(find(trialCodes{cnd}{end}(:,1) == 52))
+                trialSpikes{cnd}{end} = trialSpikes{cnd}{end}(trialSpikes{cnd}{end} < trialCodes{cnd}{end}();
+                
+            end
+        end
+    end
+end

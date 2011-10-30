@@ -1,0 +1,44 @@
+<stimulus name="fefdots" repeats="10" ex="ex_activeFixation" bgColor="0 0 0">
+    <conditions type="fef_dots" runline="stimLength seed ndots dotsize dwell centerx centery xradius yradius colorR colorG colorB">
+        <stimLength>
+            <value>100</value>
+        </stimLength>
+        <seed>
+            <value>0</value>
+        </seed>
+        <ndots>
+            <value>1</value>
+        </ndots>
+        <dotsize>
+            <value>1</value>
+        </dotsize>
+        <dwell>
+            <value>1</value>
+        </dwell>
+        <centerx>
+            <value>0</value>
+        </centerx>
+        <centery>
+            <value>0</value>
+        </centery>
+        <xradius>
+            <value>512</value>
+        </xradius>
+        <yradius>
+            <value>384</value>
+        </yradius>
+        <colorR>
+            <value>255</value>
+        </colorR>
+        <colorG>
+            <value>0</value>
+        </colorG>
+        <colorB>
+            <value>255</value>
+        </colorB>
+    </conditions>
+    <params>
+        <timeToFix>1000</timeToFix>
+        <saccadeTime>600</saccadeTime>
+    </params>
+</stimulus>
