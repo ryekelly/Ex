@@ -2,9 +2,6 @@
     <conditions type="movie" runline="movieprefix,suffix numframes dwell startframe centerx centery" movieprefix="natural/natural_">
         <suffix>
             <value>11336</value>
-            <value>41485</value>
-            <value>69292</value>
-            <value>67530</value>
             <value>32370</value>
         </suffix>
         <numframes>
