@@ -25,7 +25,7 @@
         <stayOnTarget>150</stayOnTarget>
         
         <ndots>1</ndots>
-        <dotsize>10</dotsize>
+        <dotsize>1</dotsize>
         <dwell>10</dwell>
         <centerx>0</centerx>
         <centery>0</centery>

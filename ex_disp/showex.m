@@ -136,12 +136,13 @@ while(1)
                             %%%%%% begin scalediam function %%%%%%
                             % xPos, yPos and dotRad were in
                             % units of degrees - is this necessary?
-                            E = sqrt(xPos.^2 + yPos.^2);
+                            E = sqrt((xPos./ppd).^2 + (yPos./ppd).^2);
                             X = log10(E) - 1.5;
                             equality = 0.8124 + (0.5324 .* X) + (0.0648 * X.^2) + (0.0788 * X.^3);
                             N = 10.^equality;
                             M = 1.0 ./ N;
-                            alldotRad = sqrt((dotRad^2)./M); % dot radii
+                            alldotRad = sqrt(((dotRad./ppd)^2)./M); % dot radii
+                            alldotRad = alldotRad .* ppd;
                             %%%%%% end scalediam function %%%%%%
                             
                             dotPositions(1,:,i) = xPos - alldotRad;

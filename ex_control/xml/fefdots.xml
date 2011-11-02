@@ -1,7 +1,7 @@
 <stimulus name="fefdots" repeats="10" ex="ex_activeFixation" bgColor="0 0 0">
     <conditions type="fef_dots" runline="stimLength seed ndots dotsize dwell centerx centery xradius yradius colorR colorG colorB">
         <stimLength>
-            <value>100</value>
+            <value>1000</value>
         </stimLength>
         <seed>
             <value>0</value>
@@ -13,7 +13,7 @@
             <value>1</value>
         </dotsize>
         <dwell>
-            <value>1</value>
+            <value>100</value>
         </dwell>
         <centerx>
             <value>0</value>
@@ -31,7 +31,7 @@
             <value>255</value>
         </colorR>
         <colorG>
-            <value>0</value>
+            <value>255</value>
         </colorG>
         <colorB>
             <value>255</value>
