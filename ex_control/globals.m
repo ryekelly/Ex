@@ -1,7 +1,7 @@
 %%% GLOBAL PARAMETERS FILE
 
 %%%% Settings for debugging/demo
-params.getEyes = 1; % 1 for using monkey eye movements, 0 for mouse
+params.getEyes = 0; % 1 for using monkey eye movements, 0 for mouse
 params.sendingCodes = 1; % 1 for sending digital codes, 0 for none
 params.rewarding = 1; % 1 for providing rewards, 0 for none
 params.getSpikes = 1;
