@@ -25,8 +25,8 @@ u = udp(ipAddress,'RemotePort',8844,'LocalPort',8866);
 fopen(u);
 
 % specifies size and location of photodiode square:
-% upper left of screen, 65 x 65 pixels
-diodeLoc = [0 0 65 65];
+% upper left of screen, 50 x 50 pixels
+diodeLoc = [0 0 50 50];
 
 % bottom right of screen, 65 x 65 pixels
 %diodeLoc = [960 704 1024 768];
