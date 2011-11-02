@@ -4,8 +4,8 @@
 params.getEyes = 0; % 1 for using monkey eye movements, 0 for mouse
 params.sendingCodes = 1; % 1 for sending digital codes, 0 for none
 params.rewarding = 1; % 1 for providing rewards, 0 for none
-params.getSpikes = 1;
-params.writeFile = 0;
+params.getSpikes = 1; % 1 to bring in spikes from analog input, 0 to not
+params.writeFile = 0; % 1 to write trial data to file, 0 to not
 %
 params.ipAddress = '192.168.1.10'; % IP address of display computer
 params.screenDistance = 36; % distance from eye to screen in cm
@@ -28,7 +28,7 @@ params.spikeThreshold = 1;
 params.histTickSpacing = 250;
 % used by plotEyes to smooth eye movements - currently just a mean of last
 % 'n' data points
-params.eyeSmoothing = 20; % must be 1 or greater
+params.eyeSmoothing = 20; % must be >=1
 
 %screen parameters
 wins.voltageSize = [0 0 500 500];
