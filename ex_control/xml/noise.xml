@@ -1,7 +1,7 @@
 <stimulus name="noise" repeats="1" ex="ex_activeFixation" bgColor="0 0 0">
-    <conditions type="movie" runline="movieprefix,suffix numframes dwell startframe centerx centery" movieprefix="noise/noise">
+    <conditions type="movie" runline="movieprefix,suffix numframes dwell startframe centerx centery" movieprefix="example/noise">
         <suffix>
-            <value>1:60</value>
+            <value>1:10</value>
         </suffix>
         <dwell>
             <value>4</value>

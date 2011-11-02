@@ -21,7 +21,8 @@
         <targetDuration>50</targetDuration>
         <noFixTimeout>1000</noFixTimeout>
         <targetOnsetDelay>500</targetOnsetDelay>
-        <saccadeTime>500</saccadeTime>
+        <saccadeInitiate>500</saccadeInitiate>
+        <saccadeTime>200</saccadeTime>
         <stayOnTarget>200</stayOnTarget>
     </params>  
 </stimulus>

@@ -1,5 +1,5 @@
 <stimulus repeats="200" ex="ex_activeFixation" bgColor="0 0 0">
-    <conditions type="movie" runline="movieprefix,suffix numframes dwell startframe centerx centery" movieprefix="natural/natural_">
+    <conditions type="movie" runline="movieprefix,suffix numframes dwell startframe centerx centery" movieprefix="example/natural_">
         <suffix>
             <value>11336</value>
             <value>32370</value>
