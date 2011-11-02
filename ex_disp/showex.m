@@ -314,6 +314,10 @@ while(1)
                 res = Screen('Resolution',w);
                 s1 = [num2str(res.width),' ',num2str(res.height),' ',num2str(res.pixelSize),' ',num2str(res.hz)];
                 
+            case 'screen'
+                args = textscan(s,'%n');
+                scrd = args{1}(1);       % screen distance in cm
+                pixpercm = args{1}(2);   % pixels per cm
         end
         
         fprintf(u,s1);
