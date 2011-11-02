@@ -290,6 +290,21 @@ while 1
         params.juiceX = str2double(c);
     elseif c == 'j'
         giveJuice();
+    elseif c == 'm'
+        % toggle between mouse mode and monkey mode - not fully working
+        if params.getEyes
+            params.getEyes = 0;
+            samp(-4);
+            aio.TimerFcn = {@plotMouse};
+            trialData{1} = [xmlFile ' (MOUSE MODE)'];
+            drawTrialData();
+        else
+            params.getEyes = 1;
+            samp;
+            aio.TimerFcn = {@plotEyes};
+            trialData{1} = xmlFile;
+            drawTrialData();
+        end
     elseif c == 'l'
         Screen('CopyWindow',wins.voltageBG,wins.voltage,wins.voltageDim,wins.voltageDim);
         Screen('CopyWindow',wins.eyeBG,wins.eye,wins.eyeDim,wins.eyeDim);                    

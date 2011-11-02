@@ -4,12 +4,12 @@ function plotEyes(obj, ~)
 % called by a timer initiated by runex. gets the current eye position on
 % the screen.  only used in monkey mode.
 
-global wins; % eyes params;
+global wins params;
 
-pt = samp;
+%pt = samp;
 
-%%%% MATT if you want to smooth the last 10 points do this
-% pt = mean(samp(10));
+%%%% MATT if you want to smooth the last X points do this
+pt = mean(samp(params.eyeSmoothing),1);
 
 pt = pt .* wins.pixelsPerMV + wins.midV;
 

@@ -13,9 +13,9 @@ params.pixPerCM = 27.03; % pixels per centimeter of screen
 % fixation window (pixels)
 params.fixRad = 50;
 % target window (pixels)
-params.targetRad = 70;
+params.targetRad = 90;
 %calibration params
-params.extent = 150; % spacing of calibration dots in pixels
+params.extent = 250; % spacing of calibration dots in pixels
 params.calibX = [-1 0 1] * params.extent;
 params.calibY = [-1 0 1] * params.extent;
 % juice-related params
@@ -26,8 +26,9 @@ params.juiceTTLDuration = 1; % in ms, must be >= 1 to give juice
 params.histogramSamples = 5000;
 params.spikeThreshold = 1;
 params.histTickSpacing = 250;
-% ??
-params.eyeSmoothing = 10;
+% used by plotEyes to smooth eye movements - currently just a mean of last
+% 'n' data points
+params.eyeSmoothing = 20; % must be 1 or greater
 
 %screen parameters
 wins.voltageSize = [0 0 500 500];
@@ -58,6 +59,7 @@ codes.FIX_ON = 2 ;
 codes.FIX_OFF = 3 ;
 codes.FIX_MOVE = 4 ;
 codes.REWARD = 5 ;
+%
 codes.STIM_ON = 10 ;
 codes.STIM1_ON = 11 ;
 codes.STIM2_ON = 12 ;
