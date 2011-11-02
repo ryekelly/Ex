@@ -31,7 +31,7 @@
         <centery>0</centery>
         <xradius>512</xradius>
         <yradius>384</yradius>
-        <colorFEF>[255 255 255]</colorFEF>
+        <colorFEF>[12 12 12]</colorFEF>
     </params>
     <randoms>
         <seed>1:100</seed>
