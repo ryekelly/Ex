@@ -1,6 +1,11 @@
 function result = ex_SaccadeTask(e)
 % ex file: ex_saccadeTask
 %
+% Uses codes in the 2000s range to indicate stimulus types
+% 2001 - visually guided saccade
+% 2002 - memory guided saccade
+% 2003 - delayed visually guided saccade
+%
 % General file for memory and visually guided saccade tasks 
 %
 % XML REQUIREMENTS
@@ -14,6 +19,7 @@ function result = ex_SaccadeTask(e)
 % fixDuration: length of initial fixation required
 % targetDuration: duration that target is on screen
 % stayOnTarget: length of target fixation required
+% saccadeInitiate: maximum time allowed to leave fixation window
 % saccadeTime: maximum time allowed to reach target
 
     global params codes behav;
@@ -22,8 +28,7 @@ function result = ex_SaccadeTask(e)
     
     result = 0;
     
-    % take radius and angle and figure out x/y
-    % also pass in color too
+    % take radius and angle and figure out x/y for saccade direction
     theta = deg2rad(-1 * e.angle);
     newX = round(e.distance*cos(theta));
     newY = round(e.distance*sin(theta));
@@ -41,7 +46,7 @@ function result = ex_SaccadeTask(e)
     
     if ~waitForFixation(e.timeToFix,e.fixX,e.fixY,params.fixRad);
         % failed to achieve fixation
-        sendCode(codes.IGNORED)
+        sendCode(codes.IGNORED);
         msgAndWait('all_off');
         sendCode(codes.FIX_OFF);
         waitForMS(e.noFixTimeout);
@@ -62,7 +67,7 @@ function result = ex_SaccadeTask(e)
     % Decision point - is this VisGuided, Delay-VisGuided, or Mem-Guided
     if (e.targetOnsetDelay == e.fixDuration)
         % Visually Guided Saccade
-        % sendCode(2001?); % send code specific to this stimulus type
+        sendCode(2001); % send code specific to this stimulus type
         histAlign();
         % turn fix pt off and target on simultaneously
         msg('queue_begin');
@@ -70,19 +75,19 @@ function result = ex_SaccadeTask(e)
         msg('obj_off 1'); 
         msgAndWait('queue_end');
         sendCode(codes.FIX_OFF);
-        sendCode(codes.STIM_ON);
+        sendCode(codes.TARG_ON);
     elseif ((e.targetOnsetDelay + e.targetDuration) < e.fixDuration)
         % Memory Guided Saccade
-        % sendCode(2001?); % send code specific to this stimulus type
+        sendCode(2002); % send code specific to this stimulus type
         msgAndWait('obj_on 2');
-        sendCode(codes.STIM_ON);
+        sendCode(codes.TARG_ON);
         histAlign();
 
         if ~waitForMS(e.targetDuration,e.fixX,e.fixY,params.fixRad)
             % didn't hold fixation during target display
             sendCode(codes.BROKE_FIX);
             msgAndWait('all_off');
-            sendCode(codes.STIM_OFF);
+            sendCode(codes.TARG_OFF);
             sendCode(codes.FIX_OFF);
             waitForMS(e.noFixTimeout);
             result = 2;
@@ -90,7 +95,7 @@ function result = ex_SaccadeTask(e)
         end
 
         msgAndWait('obj_off 2');
-        sendCode(codes.STIM_OFF);
+        sendCode(codes.TARG_OFF);
         
         waitRemainder = e.fixDuration - (e.targetOnsetDelay + e.targetDuration);
         if ~waitForMS(waitRemainder,e.fixX,e.fixY,params.fixRad)
@@ -103,13 +108,13 @@ function result = ex_SaccadeTask(e)
             return;
         end
         
-        sendCode(codes.FIX_OFF);
         msgAndWait('obj_off 1'); 
+        sendCode(codes.FIX_OFF);
     elseif (((e.targetOnsetDelay + e.targetDuration) > e.fixDuration) && (e.targetOnsetDelay < e.fixDuration))
         % Delayed Visually Guided Saccade
-        % sendCode(2001?); % send code specific to this stimulus type
+        sendCode(2003); % send code specific to this stimulus type
         msgAndWait('obj_on 2');
-        sendCode(codes.STIM_ON);
+        sendCode(codes.TARG_ON);
         histAlign();
 
         waitRemainder = e.fixDuration - e.targetOnsetDelay;
@@ -117,24 +122,38 @@ function result = ex_SaccadeTask(e)
             % didn't hold fixation during target display
             sendCode(codes.BROKE_FIX);
             msgAndWait('all_off');
-            sendCode(codes.STIM_OFF);
+            sendCode(codes.TARG_OFF);
             sendCode(codes.FIX_OFF);
             waitForMS(e.noFixTimeout);
             result = 2;
             return;
         end
         
-        sendCode(codes.FIX_OFF);
         msgAndWait('obj_off 1'); 
+        sendCode(codes.FIX_OFF);
     else
         warning('Condition not valid');
-        %%% fill this in?
+        %%% should there be some other behavior here?
         return;
     end
     
+    % detect saccade here - we're just going to count the time leaving the
+    % fixation window as the saccade but it would be better to actually
+    % analyze the eye movements.
+    if waitForMS(e.saccadeInitiate,e.fixX,e.fixY,params.fixRad)
+        % didn't leave fixation window
+        sendCode(codes.NO_CHOICE);
+        msgAndWait('all_off');
+        sendCode(codes.FIX_OFF);
+        result = 2;
+        return;
+    end
+
+    sendCode(codes.SACCADE);
+    
     if ~waitForFixation(e.saccadeTime,newX,newY,params.targetRad)
         % didn't reach target
-        sendCode(codes.NO_CHOICE)
+        sendCode(codes.NO_CHOICE);
         msgAndWait('all_off');
         sendCode(codes.FIX_OFF);
         result = 2;
@@ -150,13 +169,10 @@ function result = ex_SaccadeTask(e)
         return;
     end
 
-    result = 1;
     sendCode(codes.FIXATE);
-    % this should be correct code
+    sendCode(codes.CORRECT);
+    sendCode(codes.TARG_OFF);
+    result = 1;
     
-    sendCode(codes.STIM_OFF);
-    
-    histStop();
-    % send code all off?
-    
+    histStop();    
     

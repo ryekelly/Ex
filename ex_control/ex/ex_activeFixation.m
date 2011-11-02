@@ -92,8 +92,6 @@ function result = ex_activeFixation(e)
     newX = round(e.saccadeLength * cos(e.saccadeDir));
     newY = round(e.saccadeLength * sin(e.saccadeDir));
 
-    histStop();
-
     % turn off stimulus and turn on target
     msgAndWait('queue_begin');
     msg('obj_off 2');
@@ -102,6 +100,8 @@ function result = ex_activeFixation(e)
     sendCode(codes.STIM_OFF);
     sendCode(codes.FIX_MOVE);
     
+    histStop();
+
     if ~waitForFixation(e.saccadeTime,newX,newY,params.targetRad)
         % didn't reach target
         sendCode(codes.NO_CHOICE);

@@ -1,7 +1,8 @@
 function result = ex_memoryGuidedSaccadePlusDots(e)
-% ex file: ex_saccadeTask
+% ex file: ex_memoryGuidedSaccadePlusDots
 %
-% General file for memory and visually guided saccade tasks 
+% File for FEF experiment where we show dots for a revcor during the
+% memory-guided saccade task
 %
 % XML REQUIREMENTS
 % angle: angle of the target dot from the fixation point 0-360
@@ -28,110 +29,120 @@ function result = ex_memoryGuidedSaccadePlusDots(e)
 
     global params codes behav;
     
-    fixX = 0;
-    fixY = 0;
-    fixPtRad = 5;   
-       
-    objID = 2;
+    objID = 3;
     
     result = 0;
     
-    % take radius and angle and figure out x/y
-    % also pass in color too
-    
+    % take radius and angle and figure out x/y for saccade direction
     theta = deg2rad(-1 * e.angle);
     newX = round(e.distance*cos(theta));
     newY = round(e.distance*sin(theta));
         
     waitRemainder = e.fixDuration - (e.targetOnsetDelay + e.targetDuration);
     numFrames = ceil(waitRemainder*1000/params.slaveHz);
-    
-    msg('set 1 oval 0 %i %i %i 0 0 255',[fixX fixY fixPtRad]);
+
+    % obj 1 is fix pt, obj 2 is target, diode attached to obj 2
+    msg('set 1 oval 0 %i %i %i %i %i %i',[e.fixX e.fixY e.fixRad e.fixColor(1) e.fixColor(2) e.fixColor(3)]);
     msg('set 2 oval 0 %i %i %i %i %i %i',[newX newY e.size e.targetColor(1) e.targetColor(2) e.targetColor(3)]);
     msg('set 3 fef_dots %i %i %i %i %i %i %i %i %i %i %i %i',[numFrames e.seed e.ndots e.dotsize e.dwell e.centerx e.centery e.xradius e.yradius e.colorFEF]);
-    
     msg(['diode ' num2str(objID)]);    
     
-    drawFixationWindows(fixX,fixY,params.fixRad);
+    %drawFixationWindows(fixX,fixY,params.fixRad);
 
     msgAndWait('ack');
-    
-    sendCode(codes.FIX_ON);
-    % fixation turns on
+    histStart();
+
     msgAndWait('obj_on 1');
+    sendCode(codes.FIX_ON);
     
-    if ~waitForFixation(e.timeToFix,fixX,fixY,params.fixRad);
-        % failed to acheive fixation
+    if ~waitForFixation(e.timeToFix,e.fixX,e.fixY,params.fixRad);
+        % failed to achieve fixation
+        sendCode(codes.IGNORED);
+        msgAndWait('all_off');
         sendCode(codes.FIX_OFF);
-        msg('all_off');
         waitForMS(e.noFixTimeout);
         result = 3;
         return;
     end
 
-    % error code here should be broke fixation
-    if ~waitForMS(e.targetOnsetDelay,fixX,fixY,params.fixRad)
+    if ~waitForMS(e.targetOnsetDelay,e.fixX,e.fixY,params.fixRad)
+        % hold fixation before stimulus comes on
+        sendCode(codes.BROKE_FIX);
+        msgAndWait('all_off');
         sendCode(codes.FIX_OFF);
+        waitForMS(e.noFixTimeout);
         result = 3;
-        %sendCode(codes.BROKEFIX); % ???
         return;
     end
     
-    sendCode(codes.STIM_ON);
-    % target turns on
-    msgAndWait('obj_on 2');
-
-    if ~waitForMS(e.targetDuration,fixX,fixY,params.fixRad)
-        sendCode(codes.FIX_OFF);
-        % should be sending different code - error
-        result = 2;
-        return;
-    end
-
-    sendCode(codes.STIM_OFF);
-    % target turns off
-    msgAndWait('obj_off 2');
-
-    msg('obj_on 3');
-    
-    if ~waitForMS(waitRemainder,fixX,fixY,params.fixRad)
-        sendCode(codes.FIX_OFF);
-        % should be sending different code - error
-        result = 2;
-        return;
-    end
-    
-    msg('obj_off 3');
+    % set targetDuration to 0 if you want fixation only task
+    % need to also set distance to 0 and angle to a single value
+    if (e.targetDuration > 0)
+        % target turns on
+        msgAndWait('obj_on 2');
+        sendCode(codes.TARG_ON);
         
-    sendCode(codes.FIX_OFF);
-    msgAndWait('obj_off 1'); 
-    drawFixationWindows(newX,newY,params.targetRad);
+        if ~waitForMS(e.targetDuration,e.fixX,e.fixY,params.fixRad)
+            % didn't hold fixation during target display
+            sendCode(codes.BROKE_FIX);
+            msgAndWait('all_off');
+            sendCode(codes.TARG_OFF);
+            sendCode(codes.FIX_OFF);
+            waitForMS(e.noFixTimeout);
+            result = 2;
+            return;
+        end
+    end
 
-    % monkey needs to make the saccade now
-    
-    % reach target window
-    if ~waitForFixation(e.saccadeTime,newX,newY,params.targetRad)
+    % turn saccade target off and dots on
+    msgAndWait('queue_begin');
+    msg('obj_off 2'); % if targetDuration is zero, this is unecessary
+    msg('obj_on 3');
+    msgAndWait('queue_end');
+
+    if ~waitForMS(waitRemainder,e.fixX,e.fixY,params.fixRad)
+        % didn't hold fixation during period after target offset
+        sendCode(codes.BROKE_FIX);
+        msgAndWait('all_off');
         sendCode(codes.FIX_OFF);
-        % should be sending different code - error not reaching target
+        waitForMS(e.noFixTimeout);
         result = 2;
         return;
     end
-
-    % monkey needs to stay in window
     
-    % stay in target window
-    if ~waitForMS(e.stayOnTarget,newX,newY,params.targetRad)
-        sendCode(codes.FIX_OFF);
-        % should send left target early code
-        result = 2;
-        return;
-    end
-
-    result = 1;
-    sendCode(codes.FIXATE);
-    % this should be correct code
-    
+    % turn off dots and fix point
+    msgAndWait('queue_begin');
+    msg('obj_off 3');
+    msg('obj_off 1');
+    msgAndWait('queue_end');
     sendCode(codes.STIM_OFF);
-    % send code all off?
+    sendCode(codes.FIX_OFF);
     
+    %drawFixationWindows(newX,newY,params.targetRad);
+
+    if ~waitForFixation(e.saccadeTime,newX,newY,params.targetRad)
+        % didn't reach target
+        sendCode(codes.NO_CHOICE);
+        msgAndWait('all_off');
+        sendCode(codes.FIX_OFF);
+        result = 2;
+        return;
+    end
+    
+    if ~waitForMS(e.stayOnTarget,newX,newY,params.targetRad)
+        % didn't stay on target long enough
+        sendCode(codes.BROKE_TARG);
+        msgAndWait('all_off');
+        sendCode(codes.FIX_OFF);
+        result = 2;
+        return;
+    end
+
+    sendCode(codes.FIXATE);
+    sendCode(codes.CORRECT);
+    result = 1;
+    
+    histStop();    
+   
+ 
     
