@@ -341,7 +341,8 @@ while(1)
                 args = textscan(s,'%n');
                 scrd = args{1}(1);       % screen distance in cm
                 pixpercm = args{1}(2);   % pixels per cm
-                ppd = tan(degtorad(1)) * scrd * pixpercm; % pixels per degree
+                tan(degtorad(1)) * scrd * pixpercm;
+                ppd = 0;                 % pixels per degree
         end
         
         fprintf(u,s1);
