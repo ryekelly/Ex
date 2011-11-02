@@ -324,6 +324,9 @@ while 1
         params.slavePixelSize = ts{3};
         params.slaveHz = ts{4};
 
+        % now tell the display the screenDistance and pixPerCM
+        msg('screen %f %f',[params.screenDistance, params.pixPerCM]);
+
         fprintf(out,'stim');
         
         trialMessage = 0;

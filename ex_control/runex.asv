@@ -46,7 +46,8 @@ if nargin > 2
     params.writeFile = 1;
     % check if file exists
     if exist(outfile,'file')
-        
+        load(outfile);
+        warning('*** Output file exists, so it was loaded ***');
     end
 end
 
@@ -158,8 +159,6 @@ msg('bg_color %s',eParams.bgColor);
 while 1 
     c = GetChar;
     FlushEvents;
-    
-    %startHistogram();
     
     if c == 'c'
         trialData{4} = 'Calibrating...(g)ood position, (b)ack up, (q)uit, (j)uice, no( )reward';
@@ -291,21 +290,45 @@ while 1
         params.juiceX = str2double(c);
     elseif c == 'j'
         giveJuice();
+    elseif c == 'm'
+        % toggle between mouse mode and monkey mode - not fully working
+        if params.getEyes
+            params.getEyes = 0;
+            samp(-4);
+            aio.TimerFcn = {@plotMouse};
+            trialData{1} = [xmlFile ' (MOUSE MODE)'];
+            drawTrialData();
+        else
+            params.getEyes = 1;
+            samp;
+            aio.TimerFcn = {@plotEyes};
+            trialData{1} = xmlFile;
+            drawTrialData();
+        end
     elseif c == 'l'
         Screen('CopyWindow',wins.voltageBG,wins.voltage,wins.voltageDim,wins.voltageDim);
         Screen('CopyWindow',wins.eyeBG,wins.eye,wins.eyeDim,wins.eyeDim);                    
     elseif c == 's'
+        % set the background color here
         msg('bg_color %s',eParams.bgColor);
-        msgAndWait('ack');
+
+        % get some basic info from the slave about display properties
         msg('framerate');
-        params.slaveHz = str2double(waitFor());        
+        params.slaveFrameTime = str2double(waitFor());        
         msg('resolution');
         tstr = waitFor();
-        %[params.slaveWidth tstr] = strtok(tstr);
-        %[params.slaveHeight tstr] = strtok(tstr);
-        %[params.slavePixelSize tstr] = strtok(tstr);
-        %[params.slaveHz tstr] = strtok(tstr);
+        ts = textscan(tstr,'');
+        params.slaveWidth = ts{1};
+        params.slaveHeight = ts{2};
+        params.slavePixelSize = ts{3};
+        params.slaveHz = ts{4};
 
+        % now tell the display the screenDistance and pixPerCM
+        msg('screen %f %f',[params.screenDistance, params.pixPerCM]);
+
+        % 
+        msgAndWait('ack');
+        
         fprintf(out,'stim');
         
         trialMessage = 0;
@@ -365,9 +388,6 @@ while 1
                 msg('all_off');
                 msgAndWait('rem_all');
                 
-                % place to save dailyglobals - save behav here? anything
-                % else?
-                
                 if trialResult == 1
                     sendCode(codes.REWARD);
                     giveJuice();
@@ -390,16 +410,17 @@ while 1
                 allCodes{end}.trialResult = trialResult;
                 allCodes{end}.codes = thisTrialCodes;
                 
-                % this is where we might write these codes to a file
+                % Write allCodes to a file to keep track of data on Ex side
+                % Can use the behav struct to keep track of behavior if you
+                % like
                 if params.writeFile
-                    % do file writing here - write allCodes to file
-                    % maybe .mat here
-                    save(outfile,'allCodes');
+                    save(outfile,'allCodes','behav');
                 end
                 
                 if trialMessage == -1
                     break;
                 end
+                
             end
 
             if trialMessage == -1
