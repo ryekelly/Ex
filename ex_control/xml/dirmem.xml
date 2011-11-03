@@ -1,8 +1,14 @@
 <stimulus name="dirtuning" repeats="40" ex="ex_SaccadeTask" bgColor="0 0 0">
     <conditions>
-        <distance>224</distance>
-        <angle>0</angle>
-        <size>15</size>
+        <distance>
+            <value>224</value>
+        </distance>
+        <angle>
+            <value>0</value>
+        </angle>
+        <size>
+            <value>15</value>
+        </size>
     </conditions>
     <params>
         <fixX>0</fixX>

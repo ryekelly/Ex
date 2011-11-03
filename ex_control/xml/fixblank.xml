@@ -1,6 +1,8 @@
 <stimulus name="fixblank" repeats="10" ex="ex_activeFixation" bgColor="128 128 128">
     <conditions type="blank" runline="stimLength">
-        <stimLength>100</stimLength>
+        <stimLength>
+            <value>100</value>
+        </stimLength>
     </conditions>
     <params>
         <fixX>0</fixX>
