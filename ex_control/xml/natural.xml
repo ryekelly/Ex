@@ -1,27 +1,11 @@
 <stimulus repeats="200" ex="ex_activeFixation" bgColor="0 0 0">
     <conditions type="movie" runline="movieprefix,suffix numframes dwell startframe centerx centery" movieprefix="example/natural_">
-        <suffix>
-            <value>11336</value>
-            <value>32370</value>
-        </suffix>
-        <numframes>
-            <value>100</value>
-        </numframes>
-        <dwell>
-            <value>4</value>
-        </dwell>
-        <startframe>
-            <value>1</value>
-        </startframe>
-        <centerx>
-            <value>-4</value>
-            <value>34</value>
-            <value>74</value>
-        </centerx>
-        <centery>
-            <value>61</value>
-            <value>1</value>
-        </centery>
+        <suffix>[11336 32370]</suffix>
+        <numframes>100</numframes>
+        <dwell>4</dwell>
+        <startframe>1</startframe>
+        <centerx>[-4 34 74]</centerx>
+        <centery>[61 1]</centery>
     </conditions>
     <params>
         <fixX>0</fixX>

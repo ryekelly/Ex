@@ -1,14 +1,8 @@
 <stimulus name="amptuning" repeats="40" ex="ex_SaccadeTask" bgColor="0 0 0">
     <conditions type="circle">
-        <distance>
-            <value>15:30:360</value>
-        </distance>
-        <angle>
-            <value>180</value>
-        </angle>
-        <size>
-            <value>15</value>
-        </size>
+        <distance>15:30:360</distance>
+        <angle>180</angle>
+        <size>15</size>
     </conditions>
     <params>
         <fixX>0</fixX>

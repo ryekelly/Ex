@@ -33,7 +33,7 @@ for i = 1:length(x.Children)
             pVal{i} = [];
                         
             for j = 1:length(c(i).Children)
-                thisVal = c(i).Children(j).Children.Data;
+                thisVal = c(i).Children(j).Data;
 
                 pVal{i} = [pVal{i} eval(thisVal)];
             end                
