@@ -27,18 +27,22 @@ for i = 1:length(x.Children)
                  
         pVal = cell(length(c),1);
         pName = cell(length(c),1);
-        
-        for i = 1:length(c)
-            pName{i} = c(i).Name;
-            pVal{i} = [];
-                        
-            for j = 1:length(c(i).Children)
-                thisVal = c(i).Children(j).Data;
+        pData = cell(length(c),1);
 
-                pVal{i} = [pVal{i} eval(thisVal)];
-            end                
-        end        
-                
+        for i = 1:length(c)
+            if strcmp(c(i).Name,'grouped');
+                for j = 1:length(c(i).Children)
+                    pName{i}{j} = c(i).Children(j).Name;
+                    pDat{i}{j} = eval(c(i).Children(j).Children.Data);
+                end
+                pVal{i} = 1:length(pDat{i}{1});
+            else
+                pName{i} = c(i).Name;
+                pDat{i} = eval(c(i).Children(1).Data);
+                pVal{i} = 1:length(pDat{i});
+            end     
+        end
+
         ndGridCmd = '[';
         for i = 1:length(pVal)
             ndGridCmd = sprintf('%sp{%i} ',ndGridCmd,i);
@@ -48,22 +52,28 @@ for i = 1:length(x.Children)
             ndGridCmd = sprintf('%spVal{%i},',ndGridCmd,i);
         end
         ndGridCmd = [ndGridCmd(1:end-1) ');'];
-
+  
         p = cell(length(pVal),1);
         eval(ndGridCmd);
-        
+
         for i = 1:length(p{1}(:))
             for j = 1:length(node.Attributes)
                 eval(sprintf('m{id}.%s = node.Attributes(j).Value;',node.Attributes(j).Name));
             end
             
             
-        for j = 1:length(pVal)
-                eval(sprintf('m{id}.%s = p{j}(i);',pName{j}));
+            for j = 1:length(pVal)
+                if iscell(pName{j})
+                    for k = 1:length(pName{j})
+                        % WORK HERE
+                        eval(sprintf('m{id}.%s = pDat{j}{k}(p{j}(i));',pName{j}{k}));
+                    end
+                else
+                    eval(sprintf('m{id}.%s = pDat{j}(p{j}(i));',pName{j}));
+                end
             end
             id = id + 1;
         end
-        
         
     elseif strcmp(node.Name,'params')
         for i = 1:length(node.Children)
