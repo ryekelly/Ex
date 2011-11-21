@@ -313,6 +313,10 @@ while 1
         msg('bg_color %s',eParams.bgColor);
         msgAndWait('ack');
 
+        % send the eParams here, since we don't need them every
+        % trial.
+        sendStruct(eParams);
+
         % get some basic info from the slave about display properties
         msg('framerate');
         params.slaveFrameTime = str2double(waitFor());        
@@ -357,7 +361,6 @@ while 1
                 sendCode(cnd+32768); % send condition # in 32769-65535 range
                                 
                 e = exp{cnd};
-                e = catstruct(e,eParams);
                 fn = fieldnames(eRand);
                 for i = 1:length(fn)                    
                     fieldName = fn{i};                    
@@ -365,6 +368,10 @@ while 1
                     val = val(randi(length(val)));
                     e.(fieldName) = val;
                 end
+                % send the trial parameters here, before adding
+                % eParams to e.
+                sendStruct(e);
+                e = catstruct(e,eParams);
                 
                 try
                     histStart();
