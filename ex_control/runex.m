@@ -248,7 +248,7 @@ while 1
                     d = get(aio,'UserData');
 
                     calibration{1}(pt,:) = [posX(pt) posY(pt)];
-                    calibration{2}(pt,:) = d(2,:);
+                    calibration{2}(pt,:) = d(end,:);
 
                     drawCalibration(pt);
                     Screen('CopyWindow',wins.voltageBG,wins.voltage,wins.voltageDim,wins.voltageDim);
