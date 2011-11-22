@@ -180,6 +180,7 @@ while 1
         
         while pt <= length(posX) + 1
             if pt > length(posX)
+                fprintf(out,'all_off');
                 trialData{4} = '(f)inished calibration, (b)ack up, (q)uit, (j)uice';
                 drawTrialData();
 
