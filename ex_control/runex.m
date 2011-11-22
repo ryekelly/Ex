@@ -22,6 +22,7 @@ addpath('ex');
 tic
 try
     [exp eParams eRand] = readExperiment(['xml/' xmlFile]);
+    eParams.xmlFile = xmlFile;
 catch
     disp(sprintf('Error reading xml file: %s',xmlFile));
     return;
