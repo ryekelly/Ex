@@ -20,7 +20,8 @@
         <fixColor>[0 0 255]</fixColor>
         <preStimFix>150</preStimFix>
         <timeToFix>1000</timeToFix>
-        <saccadeTime>600</saccadeTime>
+        <saccadeInitiate>500</saccadeInitiate>
+        <saccadeTime>200</saccadeTime>
         <stayOnTarget>150</stayOnTarget>
         <saccadeLength>150</saccadeLength>
         <noFixTimeout>1000</noFixTimeout>

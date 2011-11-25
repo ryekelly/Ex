@@ -102,6 +102,20 @@ function result = ex_activeFixation(e)
     
     histStop();
 
+    % detect saccade here - we're just going to count the time leaving the
+    % fixation window as the saccade but it would be better to actually
+    % analyze the eye movements.
+    if waitForMS(e.saccadeInitiate,e.fixX,e.fixY,params.fixRad)
+        % didn't leave fixation window
+        sendCode(codes.NO_CHOICE);
+        msgAndWait('all_off');
+        sendCode(codes.FIX_OFF);
+        result = 2;
+        return;
+    end
+
+    sendCode(codes.SACCADE);
+    
     if ~waitForFixation(e.saccadeTime,newX,newY,params.targetRad)
         % didn't reach target
         sendCode(codes.NO_CHOICE);
@@ -110,6 +124,7 @@ function result = ex_activeFixation(e)
         result = 2;
         return;
     end
+    
     if ~waitForMS(e.stayOnTarget,newX,newY,params.targetRad)
         % didn't stay on target long enough
         sendCode(codes.BROKE_TARG)

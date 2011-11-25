@@ -9,6 +9,7 @@
         <fixColor>[0 0 255]</fixColor>
         <preStimFix>0</preStimFix>
         <timeToFix>1000</timeToFix>
+        <saccadeInitiate>0</saccadeInitiate>
         <saccadeTime>0</saccadeTime>
         <stayOnTarget>0</stayOnTarget>
         <saccadeLength>0</saccadeLength>

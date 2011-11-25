@@ -21,7 +21,11 @@ function result = ex_SaccadeTask(e)
 % stayOnTarget: length of target fixation required
 % saccadeInitiate: maximum time allowed to leave fixation window
 % saccadeTime: maximum time allowed to reach target
-
+%
+% Last modified:
+% 2011/11/25 by Matt Smith
+%
+%
     global params codes behav;
     
     objID = 2;
