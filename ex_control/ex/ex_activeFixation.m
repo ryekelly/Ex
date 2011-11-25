@@ -10,8 +10,8 @@ function result = ex_activeFixation(e)
 % NAMES: all the parameters listed in runline
 % type: the type of stimulus (e.g. fef_dots,oval,etc)
 % timeToFix: the number of ms to wait for initial fixation
-% saccadeTime: the maximum number of ms to wait for a saccade after
-%   presentation of the stimulus
+% saccadeInitiate: maximum time allowed to leave fixation window
+% saccadeTime: maximum time allowed to reach target
 % preStimFix: time after fixation pt onset before stim onset
 % stayOnTarget: time after reaching target that subject must stay in window
 % saccadeLength: distance of target from fixation
@@ -19,6 +19,11 @@ function result = ex_activeFixation(e)
 % fixX, fixY, fixRad: fixation spot location in X and Y as well as RGB
 %   color
 % saccadeDir: angle of target to fixation, usually set with a random
+%
+% Last modified:
+% 2011/11/25 by Matt Smith
+%
+%
 
     global params codes behav;
     
