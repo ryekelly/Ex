@@ -381,7 +381,7 @@ while(1)
                     Screen('Close',tex);
                 
                 case 30 % dots
-                    Screen(w,'FillOval',o.color,o.dp(:,:,1+floor(o.frame/o.dwell)));                
+                    Screen(w,'FillRect',o.color,o.dp(:,:,1+floor(o.frame/o.dwell)));                
                     
                 case 99 % blank
                     
