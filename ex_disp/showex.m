@@ -71,8 +71,8 @@ while(1)
     if get(u,'BytesAvailable') > 0
         [s1 s] = strtok(fgetl(u));
                 
-        %debugging
-        %disp(s1);
+        %for debugging use this line
+        disp([s1 s]);
 
         switch s1
             case 'set' 
