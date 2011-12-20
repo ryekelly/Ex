@@ -12,6 +12,6 @@ for i = 1:length(fields)
     % Ryan's original
     %m = double([fields{i} '=' val])*256;
     %digCode([m 256]);
-    m = double([fields{i} '=' val])+256;
+    m = double([fields{i} '=' val ';'])+256;
     digCode(m);
 end

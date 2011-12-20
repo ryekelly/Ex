@@ -150,9 +150,8 @@ Screen('CopyWindow',wins.voltageBG,wins.voltage,wins.voltageDim,wins.voltageDim)
 
 drawTrialData();
 
-rpts = eParams.rpts;
 if nargin > 1
-    rpts = repeats;
+    eParams.rpts = repeats;
 end
 
 msg('bg_color %s',eParams.bgColor);
@@ -337,12 +336,12 @@ while 1
         
         trialMessage = 0;
 
-        if currentBlock > rpts
+        if currentBlock > eParams.rpts
             currentBlock = 1;
             ordering = 1:length(exp);
         end
         
-        for j = currentBlock:rpts
+        for j = currentBlock:eParams.rpts
             if isempty(ordering)                         
                 ordering = 1:length(exp);
             end
@@ -354,7 +353,7 @@ while 1
                 trialTic = tic;
                 thisTrialCodes = [];
                 
-                trialData{2} = sprintf('Block %i/%i',j,rpts);
+                trialData{2} = sprintf('Block %i/%i',j,eParams.rpts);
                 trialData{3} = sprintf('Trial %i/%i, condition %i',length(exp)-length(ordering)+1,length(exp),cnd);
                 trialData{4} = 'Running stimulus...(q)uit';
                 drawTrialData();
