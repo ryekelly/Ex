@@ -314,10 +314,6 @@ while 1
         msg('bg_color %s',eParams.bgColor);
         msgAndWait('ack');
 
-        % send the eParams here, since we don't need them every
-        % trial.
-        sendStruct(eParams);
-
         % get some basic info from the slave about display properties
         msg('framerate');
         params.slaveFrameTime = str2double(waitFor());        
@@ -332,6 +328,11 @@ while 1
         % now tell the display the screenDistance and pixPerCM
         msg('screen %f %f',[params.screenDistance, params.pixPerCM]);
 
+        % send the eParams and params here, since we don't need 
+        % them every trial. use catStruct so duplicate names produce an
+        % error
+        sendStruct(catstruct(eParams,params));        
+        
         fprintf(out,'stim');
         
         trialMessage = 0;
