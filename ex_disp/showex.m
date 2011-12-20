@@ -196,7 +196,7 @@ while(1)
                         f = a(4);
                         cps = a(5);
                         xCenter = a(6);
-                        yCenter = a(7);               
+                        yCenter = a(7) * -1; % flip y coordinate so '-' is down               
                         rad= a(8); % Size of the grating image. Needs to be a power of two.
                         contrast = a(9);
                         
@@ -249,7 +249,7 @@ while(1)
                         dwell = a(2);
                         startFrame = a(3);
                         xCenter = a(4);
-                        yCenter = a(5);
+                        yCenter = a(5) * -1; % flip y coordinate so '-' is down
 
                         vars = load(fileName);
                         
