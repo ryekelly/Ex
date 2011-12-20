@@ -53,7 +53,7 @@ function result = ex_onetarg(e)
     msgAndWait('obj_on 1');
     sendCode(codes.FIX_ON);
 
-    if ~waitForFixation(e.timeToFix,fixX,fixY,params.fixRad)
+    if ~waitForFixation(e.timeToFix,fixX,fixY,params.fixWinRad)
         % failed to achieve fixation
         sendCode(codes.IGNORED);
         sendCode(codes.FIX_OFF);
@@ -64,7 +64,7 @@ function result = ex_onetarg(e)
 
     end
     
-    if ~waitForMS(e.preStimFix,fixX,fixY,params.fixRad)
+    if ~waitForMS(e.preStimFix,fixX,fixY,params.fixWinRad)
         % hold fixation before stimulus comes on
         sendCode(codes.BROKE_FIX);
         sendCode(codes.FIX_OFF);
@@ -77,7 +77,7 @@ function result = ex_onetarg(e)
 
     histAlign();
     
-    if ~waitForSlave(fixX,fixY,params.fixRad)
+    if ~waitForSlave(fixX,fixY,params.fixWinRad)
         % failed to keep fixation
         sendCode(codes.BROKE_FIX);
         sendCode(codes.STIM_OFF);
@@ -88,8 +88,8 @@ function result = ex_onetarg(e)
         
     % choose a target location randomly around a circle
     %theta = e.saccadeDir;
-    %newX = round(3*params.fixRad*cos(theta))
-    %newY = round(3*params.fixRad*sin(theta));
+    %newX = round(3*params.fixWinRad*cos(theta))
+    %newY = round(3*params.fixWinRad*sin(theta));
     %newX = round(e.saccadeLength * cos(e.saccadeDir));
     %newY = round(e.saccadeLength * sin(e.saccadeDir));
     newX = round(e.centerx);
@@ -105,14 +105,14 @@ function result = ex_onetarg(e)
     sendCode(codes.STIM_OFF);
     sendCode(codes.FIX_MOVE);
     
-    if ~waitForFixation(e.saccadeTime,newX,newY,params.targetRad)
+    if ~waitForFixation(e.saccadeTime,newX,newY,params.targWinRad)
         % didn't reach target
         sendCode(codes.NO_CHOICE);
         sendCode(codes.FIX_OFF);
         result = 2;
         return;
     end
-    if ~waitForMS(e.stayOnTarget,newX,newY,params.targetRad)
+    if ~waitForMS(e.stayOnTarget,newX,newY,params.targWinRad)
         % didn't stay on target long enough
         sendCode(codes.BROKE_TARG)
         sendCode(codes.FIX_OFF);

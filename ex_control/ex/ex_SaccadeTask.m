@@ -48,7 +48,7 @@ function result = ex_SaccadeTask(e)
     msgAndWait('obj_on 1');
     sendCode(codes.FIX_ON);
     
-    if ~waitForFixation(e.timeToFix,e.fixX,e.fixY,params.fixRad);
+    if ~waitForFixation(e.timeToFix,e.fixX,e.fixY,params.fixWinRad);
         % failed to achieve fixation
         sendCode(codes.IGNORED);
         msgAndWait('all_off');
@@ -58,7 +58,7 @@ function result = ex_SaccadeTask(e)
         return;
     end
 
-    if ~waitForMS(e.targetOnsetDelay,e.fixX,e.fixY,params.fixRad)
+    if ~waitForMS(e.targetOnsetDelay,e.fixX,e.fixY,params.fixWinRad)
         % hold fixation before stimulus comes on
         sendCode(codes.BROKE_FIX);
         msgAndWait('all_off');
@@ -87,7 +87,7 @@ function result = ex_SaccadeTask(e)
         sendCode(codes.TARG_ON);
         histAlign();
 
-        if ~waitForMS(e.targetDuration,e.fixX,e.fixY,params.fixRad)
+        if ~waitForMS(e.targetDuration,e.fixX,e.fixY,params.fixWinRad)
             % didn't hold fixation during target display
             sendCode(codes.BROKE_FIX);
             msgAndWait('all_off');
@@ -102,7 +102,7 @@ function result = ex_SaccadeTask(e)
         sendCode(codes.TARG_OFF);
         
         waitRemainder = e.fixDuration - (e.targetOnsetDelay + e.targetDuration);
-        if ~waitForMS(waitRemainder,e.fixX,e.fixY,params.fixRad)
+        if ~waitForMS(waitRemainder,e.fixX,e.fixY,params.fixWinRad)
             % didn't hold fixation during period after target offset
             sendCode(codes.BROKE_FIX);
             msgAndWait('all_off');
@@ -122,7 +122,7 @@ function result = ex_SaccadeTask(e)
         histAlign();
 
         waitRemainder = e.fixDuration - e.targetOnsetDelay;
-        if ~waitForMS(waitRemainder,e.fixX,e.fixY,params.fixRad)
+        if ~waitForMS(waitRemainder,e.fixX,e.fixY,params.fixWinRad)
             % didn't hold fixation during target display
             sendCode(codes.BROKE_FIX);
             msgAndWait('all_off');
@@ -144,7 +144,7 @@ function result = ex_SaccadeTask(e)
     % detect saccade here - we're just going to count the time leaving the
     % fixation window as the saccade but it would be better to actually
     % analyze the eye movements.
-    if waitForMS(e.saccadeInitiate,e.fixX,e.fixY,params.fixRad)
+    if waitForMS(e.saccadeInitiate,e.fixX,e.fixY,params.fixWinRad)
         % didn't leave fixation window
         sendCode(codes.NO_CHOICE);
         msgAndWait('all_off');
@@ -155,7 +155,7 @@ function result = ex_SaccadeTask(e)
 
     sendCode(codes.SACCADE);
     
-    if ~waitForFixation(e.saccadeTime,newX,newY,params.targetRad)
+    if ~waitForFixation(e.saccadeTime,newX,newY,params.targWinRad)
         % didn't reach target
         sendCode(codes.NO_CHOICE);
         msgAndWait('all_off');
@@ -164,7 +164,7 @@ function result = ex_SaccadeTask(e)
         return;
     end
     
-    if ~waitForMS(e.stayOnTarget,newX,newY,params.targetRad)
+    if ~waitForMS(e.stayOnTarget,newX,newY,params.targWinRad)
         % didn't stay on target long enough
         sendCode(codes.BROKE_TARG);
         msgAndWait('all_off');

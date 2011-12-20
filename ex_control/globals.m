@@ -11,9 +11,9 @@ params.ipAddress = '192.168.1.10'; % IP address of display computer
 params.screenDistance = 36; % distance from eye to screen in cm
 params.pixPerCM = 27.03; % pixels per centimeter of screen
 % fixation window (pixels)
-params.fixRad = 50;
+params.fixWinRad = 50;
 % target window (pixels)
-params.targetRad = 90;
+params.targWinRad = 90;
 %calibration params
 params.extent = 250; % spacing of calibration dots in pixels
 params.calibX = [-1 0 1] * params.extent;

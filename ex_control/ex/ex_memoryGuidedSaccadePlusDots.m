@@ -29,7 +29,7 @@ function result = ex_memoryGuidedSaccadePlusDots(e)
 % colorFEF: 3 element vector for the FEF dots colors [R G B]
 %
 % Last modified:
-% 2011/11/25 by Matt Smith
+% 2011/12/20 by Matt Smith
 %
 %
 
@@ -53,7 +53,7 @@ function result = ex_memoryGuidedSaccadePlusDots(e)
     msg('set 3 fef_dots %i %i %i %i %i %i %i %i %i %i %i %i',[numFrames e.seed e.ndots e.dotsize e.dwell e.centerx e.centery e.xradius e.yradius e.colorFEF]);
     msg(['diode ' num2str(objID)]);    
     
-    %drawFixationWindows(fixX,fixY,params.fixRad);
+    %drawFixationWindows(fixX,fixY,params.fixWinRad);
 
     msgAndWait('ack');
     histStart();
@@ -61,7 +61,7 @@ function result = ex_memoryGuidedSaccadePlusDots(e)
     msgAndWait('obj_on 1');
     sendCode(codes.FIX_ON);
     
-    if ~waitForFixation(e.timeToFix,e.fixX,e.fixY,params.fixRad);
+    if ~waitForFixation(e.timeToFix,e.fixX,e.fixY,params.fixWinRad);
         % failed to achieve fixation
         sendCode(codes.IGNORED);
         msgAndWait('all_off');
@@ -71,7 +71,7 @@ function result = ex_memoryGuidedSaccadePlusDots(e)
         return;
     end
 
-    if ~waitForMS(e.targetOnsetDelay,e.fixX,e.fixY,params.fixRad)
+    if ~waitForMS(e.targetOnsetDelay,e.fixX,e.fixY,params.fixWinRad)
         % hold fixation before stimulus comes on
         sendCode(codes.BROKE_FIX);
         msgAndWait('all_off');
@@ -88,7 +88,7 @@ function result = ex_memoryGuidedSaccadePlusDots(e)
         msgAndWait('obj_on 2');
         sendCode(codes.TARG_ON);
         
-        if ~waitForMS(e.targetDuration,e.fixX,e.fixY,params.fixRad)
+        if ~waitForMS(e.targetDuration,e.fixX,e.fixY,params.fixWinRad)
             % didn't hold fixation during target display
             sendCode(codes.BROKE_FIX);
             msgAndWait('all_off');
@@ -106,7 +106,7 @@ function result = ex_memoryGuidedSaccadePlusDots(e)
     msg('obj_on 3');
     msgAndWait('queue_end');
 
-    if ~waitForMS(waitRemainder,e.fixX,e.fixY,params.fixRad)
+    if ~waitForMS(waitRemainder,e.fixX,e.fixY,params.fixWinRad)
         % didn't hold fixation during period after target offset
         sendCode(codes.BROKE_FIX);
         msgAndWait('all_off');
@@ -124,12 +124,12 @@ function result = ex_memoryGuidedSaccadePlusDots(e)
     sendCode(codes.STIM_OFF);
     sendCode(codes.FIX_OFF);
     
-    %drawFixationWindows(newX,newY,params.targetRad);
+    %drawFixationWindows(newX,newY,params.targWinRad);
 
     % detect saccade here - we're just going to count the time leaving the
     % fixation window as the saccade but it would be better to actually
     % analyze the eye movements.
-    if waitForMS(e.saccadeInitiate,e.fixX,e.fixY,params.fixRad)
+    if waitForMS(e.saccadeInitiate,e.fixX,e.fixY,params.fixWinRad)
         % didn't leave fixation window
         sendCode(codes.NO_CHOICE);
         msgAndWait('all_off');
@@ -140,7 +140,7 @@ function result = ex_memoryGuidedSaccadePlusDots(e)
 
     sendCode(codes.SACCADE);
     
-    if ~waitForFixation(e.saccadeTime,newX,newY,params.targetRad)
+    if ~waitForFixation(e.saccadeTime,newX,newY,params.targWinRad)
         % didn't reach target
         sendCode(codes.NO_CHOICE);
         msgAndWait('all_off');
@@ -149,7 +149,7 @@ function result = ex_memoryGuidedSaccadePlusDots(e)
         return;
     end
     
-    if ~waitForMS(e.stayOnTarget,newX,newY,params.targetRad)
+    if ~waitForMS(e.stayOnTarget,newX,newY,params.targWinRad)
         % didn't stay on target long enough
         sendCode(codes.BROKE_TARG);
         msgAndWait('all_off');

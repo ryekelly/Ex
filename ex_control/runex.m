@@ -18,6 +18,13 @@ global trialMessage trialData;
 global wins params codes calibration stats;
 global behav;
 
+% check first that you're in a location where there are 'ex' and 'xml'
+% subdirectories
+if (exist('ex','dir') + exist('xml','dir') ~= 14)
+    disp(sprintf('Could not find EX and XML subdirectories. Current directory is: %s',pwd));
+    return;
+end
+
 addpath('ex');
 tic
 try
@@ -332,7 +339,8 @@ while 1
         % them every trial. use catStruct so duplicate names produce an
         % error
         sendStruct(catstruct(eParams,params));        
-        
+        display(eParams)
+        display(params)
         fprintf(out,'stim');
         
         trialMessage = 0;

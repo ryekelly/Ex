@@ -53,7 +53,7 @@ function result = ex_test(e)
 
     msgAndWait('obj_on 1');
 
-    if ~waitForFixation(e.timeToFix,fixX,fixY,params.fixRad)
+    if ~waitForFixation(e.timeToFix,fixX,fixY,params.fixWinRad)
         % failed to achieve fixation
         sendCode(codes.FIX_OFF);
         result = 3;        
@@ -69,7 +69,7 @@ function result = ex_test(e)
     msg('obj_on 5');
     msgAndWait('queue_end');
     
-    if ~waitForSlave(fixX,fixY,params.fixRad)
+    if ~waitForSlave(fixX,fixY,params.fixWinRad)
         % failed to keep fixation
         sendCode(codes.FIX_OFF);
         result = 3;
@@ -79,8 +79,8 @@ function result = ex_test(e)
     sendCode(codes.STIM_OFF);
         
     theta = rand(1)*360;
-    newX = round(3*params.fixRad*cos(theta));
-    newY = round(3*params.fixRad*sin(theta));
+    newX = round(3*params.fixWinRad*cos(theta));
+    newY = round(3*params.fixWinRad*sin(theta));
 
     sendCode(codes.STOP_HISTOGRAM);
     
@@ -88,11 +88,11 @@ function result = ex_test(e)
     msgAndWait('set 1 oval 0 %i %i %i 0 0 255',[newX newY fixPtRad]);
     %msgAndWait('set 1 oval 0 %i %i %i 0 0 255',[0 0 fixPtRad]);
 
-    if ~waitForFixation(e.saccadeTime,newX,newY,params.targetRad)
+    if ~waitForFixation(e.saccadeTime,newX,newY,params.targWinRad)
         result = 2;
         return;
     end
-    if ~waitForMS(150,newX,newY,params.targetRad)
+    if ~waitForMS(150,newX,newY,params.targWinRad)
         result = 2;
         return;
     end

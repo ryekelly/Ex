@@ -58,7 +58,7 @@ function result = ex_activeFixation(e)
     msgAndWait('obj_on 1');
     sendCode(codes.FIX_ON);
 
-    if ~waitForFixation(e.timeToFix,e.fixX,e.fixY,params.fixRad)
+    if ~waitForFixation(e.timeToFix,e.fixX,e.fixY,params.fixWinRad)
         % failed to achieve fixation
         sendCode(codes.IGNORED);
         msgAndWait('all_off');
@@ -67,7 +67,7 @@ function result = ex_activeFixation(e)
         return;
     end
     
-    if ~waitForMS(e.preStimFix,e.fixX,e.fixY,params.fixRad)
+    if ~waitForMS(e.preStimFix,e.fixX,e.fixY,params.fixWinRad)
         % hold fixation before stimulus comes on
         sendCode(codes.BROKE_FIX);
         msgAndWait('all_off');
@@ -82,7 +82,7 @@ function result = ex_activeFixation(e)
     
     histAlign();
     
-    if ~waitForSlave(e.fixX,e.fixY,params.fixRad)
+    if ~waitForSlave(e.fixX,e.fixY,params.fixWinRad)
         % failed to keep fixation
         sendCode(codes.BROKE_FIX);
         msgAndWait('all_off');
@@ -118,7 +118,7 @@ function result = ex_activeFixation(e)
     % function.
     %
     if (e.saccadeInitiate > 0) % in case you don't want to have a saccade
-        if waitForMS(e.saccadeInitiate,e.fixX,e.fixY,params.fixRad)
+        if waitForMS(e.saccadeInitiate,e.fixX,e.fixY,params.fixWinRad)
             % didn't leave fixation window
             sendCode(codes.NO_CHOICE);
             msgAndWait('all_off');
@@ -130,7 +130,7 @@ function result = ex_activeFixation(e)
         sendCode(codes.SACCADE);
     end
     
-    if ~waitForFixation(e.saccadeTime,newX,newY,params.targetRad)
+    if ~waitForFixation(e.saccadeTime,newX,newY,params.targWinRad)
         % didn't reach target
         sendCode(codes.NO_CHOICE);
         msgAndWait('all_off');
@@ -139,7 +139,7 @@ function result = ex_activeFixation(e)
         return;
     end
     
-    if ~waitForMS(e.stayOnTarget,newX,newY,params.targetRad)
+    if ~waitForMS(e.stayOnTarget,newX,newY,params.targWinRad)
         % didn't stay on target long enough
         sendCode(codes.BROKE_TARG)
         msgAndWait('all_off');
