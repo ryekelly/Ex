@@ -98,7 +98,7 @@ while(1)
                             'y',a(3),'rad',a(4),'col',a(5:7));
                         objects{objID} = obj;
                     case 'fef_dots'
-                       a = sscanf(args,'%i %i %i %i %i %i %i %i %i %i %i %i');
+                       a = sscanf(args,'%i %i %i %f %i %i %i %i %i %i %i %i');
 
                         % arguments: (1) frameCount
                         %            (2) random seed
