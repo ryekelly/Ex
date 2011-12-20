@@ -23,7 +23,7 @@ function result = ex_SaccadeTask(e)
 % saccadeTime: maximum time allowed to reach target
 %
 % Last modified:
-% 2011/11/25 by Matt Smith
+% 2011/12/20 by Matt Smith
 %
 %
     global params codes behav;
@@ -136,7 +136,7 @@ function result = ex_SaccadeTask(e)
         msgAndWait('obj_off 1'); 
         sendCode(codes.FIX_OFF);
     else
-        warning('Condition not valid');
+        warning('*** EX_SACCADETASK: Condition not valid');
         %%% should there be some other behavior here?
         return;
     end

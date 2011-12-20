@@ -21,7 +21,7 @@ function result = ex_activeFixation(e)
 % saccadeDir: angle of target to fixation, usually set with a random
 %
 % Last modified:
-% 2011/11/25 by Matt Smith
+% 2011/12/20 by Matt Smith
 %
 %
 
@@ -110,16 +110,25 @@ function result = ex_activeFixation(e)
     % detect saccade here - we're just going to count the time leaving the
     % fixation window as the saccade but it would be better to actually
     % analyze the eye movements.
-    if waitForMS(e.saccadeInitiate,e.fixX,e.fixY,params.fixRad)
-        % didn't leave fixation window
-        sendCode(codes.NO_CHOICE);
-        msgAndWait('all_off');
-        sendCode(codes.FIX_OFF);
-        result = 2;
-        return;
+    %
+    % One weird thing here is it doesn't move the target window (on the
+    % controls screen) until you leave the fixation window. Doesn't matter
+    % to monkey, but a little harder for the human controlling the
+    % computer. Maybe we can fix this when we implement a saccade-detection
+    % function.
+    %
+    if (e.saccadeInitiate > 0) % in case you don't want to have a saccade
+        if waitForMS(e.saccadeInitiate,e.fixX,e.fixY,params.fixRad)
+            % didn't leave fixation window
+            sendCode(codes.NO_CHOICE);
+            msgAndWait('all_off');
+            sendCode(codes.FIX_OFF);
+            result = 2;
+            return;
+        end
+        
+        sendCode(codes.SACCADE);
     end
-
-    sendCode(codes.SACCADE);
     
     if ~waitForFixation(e.saccadeTime,newX,newY,params.targetRad)
         % didn't reach target
