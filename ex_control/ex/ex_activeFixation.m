@@ -92,10 +92,11 @@ function result = ex_activeFixation(e)
         result = 3;
         return;
     end        
-        
+
     % choose a target location randomly around a circle
-    newX = round(e.saccadeLength * cos(e.saccadeDir));
-    newY = round(e.saccadeLength * sin(e.saccadeDir));
+    theta = deg2rad(-1 * e.saccadeDir);
+    newX = round(e.saccadeLength * cos(theta));
+    newY = round(e.saccadeLength * sin(theta));
 
     % turn off stimulus and turn on target
     msgAndWait('queue_begin');
