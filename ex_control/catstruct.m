@@ -13,8 +13,8 @@ function A = catstruct(varargin)
 %
 %   CATSTRUCT(S1,S2,'sorted') will sort the fieldnames alphabetically.
 %
-%   If a fieldname occurs more than once in the argument list, only the last
-%   occurence is used, and the fields are alphabetically sorted.
+%   If a fieldname occurs more than once in the argument list, the program 
+%   prints the list of duplicate fieldnames and exits with an error message.
 %
 %   To sort the fieldnames of a structure A use:
 %     A = CATSTRUCT(A,'sorted') ;
@@ -28,7 +28,7 @@ function A = catstruct(varargin)
 %   See also CAT, STRUCT, FIELDNAMES, STRUCT2CELL
 
 % for Matlab R13 and up
-% version 2.2 (oct 2008)
+% version 2.3 (dec 2011)
 % (c) Jos van der Geest
 % email: jos@jasen.nl
 
@@ -40,6 +40,9 @@ function A = catstruct(varargin)
 %   2.1 (sep 2008) added warning and error identifiers
 %   2.2 (oct 2008) fixed error when dealing with empty structs (Thanks to
 %                  Lars Barring)
+%   2.3 (dec 2011) changed warning on duplicate fieldnames to error and
+%                  print list of duplicates
+%
 
 N = nargin ;
 
@@ -78,10 +81,18 @@ end
 FN = cat(1,FN{:}) ;
 VAL = cat(1,VAL{:}) ;
 [UFN,ind] = unique(FN) ;
-
 if numel(UFN) ~= numel(FN),
-    warning('catstruct:DuplicatesFound','Duplicate fieldnames found. Last value is used and fields are sorted') ;
-    sorted = 1 ;
+    % old method - warn on duplicates
+    %warning('catstruct:DuplicatesFound','Duplicate fieldnames found. Last value is used and fields are sorted') ;
+    %sorted = 1 ;
+    % new method - list the duplicates and produce an error
+    for ii=1:numel(UFN)
+        tdup = strfind(FN,UFN{ii});
+        if (length(cell2mat(tdup)) > 1)
+            disp(['*** Duplicate Fieldname: ',UFN{ii}]);
+        end
+    end
+    error('catstruct:DuplicatesFound','Duplicate fieldnames found. Exiting') ;
 end
 
 if sorted,

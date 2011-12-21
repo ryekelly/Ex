@@ -337,10 +337,15 @@ while 1
 
         % send the eParams and params here, since we don't need 
         % them every trial. use catStruct so duplicate names produce an
-        % error
-        sendStruct(catstruct(eParams,params));        
-        display(eParams)
-        display(params)
+        % error. use try/catch so errors exit gracefully.
+        try
+            sendStruct(catstruct(eParams,params,'sorted'));        
+        catch
+            disp('Error combining eParams and params: duplicate field name');
+            Screen('CloseAll');
+            return;
+        end
+        
         fprintf(out,'stim');
         
         trialMessage = 0;
@@ -379,9 +384,18 @@ while 1
                     e.(fieldName) = val;
                 end
                 % send the trial parameters here, before adding
-                % eParams to e.
+                % eParams to e (because eParams were sent already)
                 sendStruct(e);
-                e = catstruct(e,eParams);
+    
+                % use a try/catch here in case there are duplicate names in
+                % e and eParams
+                try
+                    e = catstruct(e,eParams);
+                catch
+                    disp('Error combining e and eParams: duplicate field name');
+                    Screen('CloseAll');
+                    return;
+                end
                 
                 try
                     histStart();
