@@ -14,6 +14,7 @@ function result = ex_memoryGuidedSaccadePlusDots(e)
 % targetOnsetDelay: time after fixation before target appears
 % fixDuration: length of initial fixation required
 % targetDuration: duration that target is on screen
+% postTargetBlank: blank period after target appears but before dot movie
 % stayOnTarget: length of target fixation required
 % saccadeInitiate: maximum time allowed to leave fixation window
 % saccadeTime: maximum time allowed to reach target
@@ -44,7 +45,7 @@ function result = ex_memoryGuidedSaccadePlusDots(e)
     newX = round(e.distance*cos(theta));
     newY = round(e.distance*sin(theta));
         
-    waitRemainder = e.fixDuration - (e.targetOnsetDelay + e.targetDuration);
+    waitRemainder = e.fixDuration - (e.targetOnsetDelay + e.targetDuration + e.postTargetBlank);
     numFrames = ceil(waitRemainder*1000/params.slaveHz);
 
     % obj 1 is fix pt, obj 2 is target, diode attached to obj 2
@@ -100,11 +101,23 @@ function result = ex_memoryGuidedSaccadePlusDots(e)
         end
     end
 
-    % turn saccade target off and dots on
-    msgAndWait('queue_begin');
-    msg('obj_off 2'); % if targetDuration is zero, this is unecessary
-    msg('obj_on 3');
-    msgAndWait('queue_end');
+    % turn saccade target off
+    msgAndWait('obj_off 2'); % if targetDuration is zero, this is unecessary
+    sendCode(codes.TARG_OFF);
+
+    if ~waitForMS(e.postTargetBlank,e.fixX,e.fixY,params.fixWinRad)
+        % didn't hold fixation during period after target offset
+        sendCode(codes.BROKE_FIX);
+        msgAndWait('all_off');
+        sendCode(codes.FIX_OFF);
+        waitForMS(e.noFixTimeout);
+        result = 2;
+        return;
+    end
+    
+    % turn on dot movie
+    msgAndWait('obj_on 3');
+    sendCode(codes.STIM_ON);
 
     if ~waitForMS(waitRemainder,e.fixX,e.fixY,params.fixWinRad)
         % didn't hold fixation during period after target offset
