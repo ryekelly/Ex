@@ -5,8 +5,8 @@ function pix = deg2pix(deg,scrd,pixpercm)
 % if only the degrees are passed in, it uses the globals to find the last two
 % values.
 %
-% deg2pix(pix)
-% deg2pix(pix,scrd,pixpercm)
+% deg2pix(deg)
+% deg2pix(deg,scrd,pixpercm)
 
 % Matthew A. Smith
 % Revised: 20110708
