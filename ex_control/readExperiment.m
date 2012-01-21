@@ -51,7 +51,7 @@ for i = 1:length(x.Children)
         for i = 1:length(pVal)
             ndGridCmd = sprintf('%spVal{%i},',ndGridCmd,i);
         end
-        ndGridCmd = [ndGridCmd(1:end-1) ');'];
+        ndGridCmd = [ndGridCmd(1:end-1) ',1);'];
   
         p = cell(length(pVal),1);
         eval(ndGridCmd);
