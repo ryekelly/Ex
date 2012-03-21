@@ -15,8 +15,13 @@ global out;
 
 if nargin > 1
     fprintf(out,msg,args);
+    % uncomment for debugging
+    disp(msg);
+    disp(args);
 else
     fprintf(out,msg);
+    % uncomment for debugging
+    disp(msg);
 end
 
 prefix = strtok(msg);

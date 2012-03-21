@@ -1,0 +1,22 @@
+<stimulus name="fixAndStim" repeats="10" ex="ex_fixAndStim" bgColor="128 128 128">
+    <conditions>
+        <fixDuration>800</fixDuration>
+    </conditions>
+    <params>
+        <fixX>0</fixX>
+        <fixY>0</fixY>
+        <fixRad>5</fixRad>
+        <fixColor>[0 0 255]</fixColor>
+        <microStimDur>20</microStimDur>
+        <preStimFix>200</preStimFix>
+        <timeToFix>1000</timeToFix>
+        <noFixTimeout>1000</noFixTimeout>
+        <saccadeInitiate>500</saccadeInitiate>
+        <saccadeTime>200</saccadeTime>
+        <stayOnTarget>150</stayOnTarget>
+        <saccadeLength>150</saccadeLength>
+    </params>
+    <randoms>
+        <saccadeDir>0:359</saccadeDir>
+    </randoms>
+</stimulus>
