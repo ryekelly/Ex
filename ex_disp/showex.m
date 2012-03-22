@@ -86,7 +86,7 @@ while(1)
                 %   (3) grating
                 switch objType
                     case 'oval'
-                       a = sscanf(args,'%i %i %i %i %i %i %i');
+                       a = sscanf(args,'%i %i %i %i %i %i %i %i %i %i');
                         % arguments: (1) frameCount
                         %            (2) x position
                         %            (3) y position
@@ -95,7 +95,7 @@ while(1)
                         %            (6) color, G
                         %            (7) color, B
                         obj = struct('type',1,'frame',0,'fc',a(1),'x',a(2), ...
-                            'y',a(3),'rad',a(4),'col',a(5:7));
+                            'y',-a(3),'rad',a(4),'col',a(5:7));
                         objects{objID} = obj;
                     case 'fef_dots'
                        a = sscanf(args,'%i %i %i %f %i %i %i %i %i %i %i %i');
@@ -196,7 +196,7 @@ while(1)
                         f = a(4);
                         cps = a(5);
                         xCenter = a(6);
-                        yCenter = a(7) * -1; % flip y coordinate so '-' is down               
+                        yCenter = -a(7); % flip y coordinate so '-' is down               
                         rad= a(8); % Size of the grating image. Needs to be a power of two.
                         contrast = a(9);
                         
@@ -236,6 +236,86 @@ while(1)
                             'ppc',ppc, 'dstRect',dstRect);
                         
                         objects{objID} = obj;
+                    case 'rgbgrating'
+                         a = sscanf(args,'%i %f %f %f %f %i %i %i %f %i %i %i %i %i %i %i %f %i %i %i');
+                       
+                        % arguments: (1) frameCount
+                        %            (2) angle
+                        %            (3) initial phase
+                        %            (4) frequency
+                        %            (5) cycles per second (baseline)
+                        %            (6) x position
+                        %            (7) y position
+                        %            (8) aperture size
+                        %            (9) contrast (0.0-1.0)
+                        %           (10) start colormap R
+                        %           (11) end colormap R
+                        %           (12) start colormap G
+                        %           (13) end colormap G
+                        %           (14) start colormap B
+                        %           (15) end colormap B
+                        %           (16) colormap resolution
+                        %           (17) peak cps
+                        %           (18) start ramp frame
+                        %           (19) ramp peak frame
+                        %           (20) end ramp frame
+                        
+                        frameCount = a(1);
+                        angle = mod(180-a(2),360);
+                        f = a(4);
+                        baseCps = a(5); %-ACS20Feb2012
+                        peakCps = a(17); %-ACS20Feb2012
+                        xCenter = a(6);
+                        yCenter = -a(7); % flip y coordinate so '-' is down               
+                        rad= a(8); % Size of the grating image. Needs to be a power of two.
+                        contrast = a(9);
+                        startRamp = a(18);
+                        peakRamp = a(19);
+                        endRamp = a(20);
+                        
+                        % Calculate parameters of the grating:
+                        ppc=ceil(1/f);  % pixels/cycle    
+                        fr=f*2*pi;
+                        visibleSize=2*rad+1;
+
+                        phase = a(3)/360*ppc;
+
+                        % Create one single static grating image:
+                        x=meshgrid(-rad:rad + ppc, -rad:rad);
+                        grating = gray + (inc*cos(fr*x))*contrast;
+                        
+                        % Impose colormap (ACS20Feb2012):
+                        cmap = [linspace(a(10),a(11),a(16))',linspace(a(12),a(13),a(16))',linspace(a(14),a(15),a(16))'];
+                        grating = ind2rgb(gray2ind(grating./max(grating(:)),a(16)),cmap);
+                        
+                        % Store grating in texture: Set the 'enforcepot' flag to 1 to signal
+                        % Psychtoolbox that we want a special scrollable power-of-two texture:
+                        gratingTex=Screen('MakeTexture', w, grating);
+
+                        % Create a single gaussian transparency mask and store it to a texture:
+                        mask=ones(2*rad+1, 2*rad+1, 2) * mean(bgColor);
+                        [x,y]=meshgrid(-1*rad:1*rad,-1*rad:1*rad);
+
+                        mask(:, :, 2)=white * (sqrt(x.^2+y.^2) > rad);
+                    
+                        maskTex=Screen('MakeTexture', w, mask);
+                        
+                        %Make shift function (ACS20Feb2011):
+                        shiftFun = baseCps*ones(1,frameCount);
+                        shiftFun(startRamp:peakRamp-1) = linspace(baseCps,peakCps,peakRamp-startRamp);
+                        shiftFun(peakRamp:endRamp-1) = linspace(peakCps,baseCps,endRamp-peakRamp);                       
+                        shift = cumsum(shiftFun.*ppc.*ifi);
+
+                        dstRect=[0 0 visibleSize visibleSize];
+                        dstRect=CenterRect(dstRect, screenRect) + [xCenter yCenter xCenter yCenter];
+
+                        obj = struct('type',10,'frame',0,'fc',a(1), ...
+                            'angle',angle, 'phase',phase, 'shift', shift, ...
+                            'size',visibleSize, 'x',xCenter,'y',yCenter, ...
+                            'grating',gratingTex, 'mask',maskTex, ...
+                            'ppc',ppc, 'dstRect',dstRect);
+                        
+                        objects{objID} = obj;
                     case 'movie'
                         [fileName argsRest] = strtok(args);
                         a = sscanf(argsRest,'%i %i %i %i %i');
@@ -265,7 +345,6 @@ while(1)
                         obj.mov = vars.mov;
                         
                         objects{objID} = obj;
-                        
                 end
         
             case 'obj_on'
@@ -355,20 +434,23 @@ while(1)
         for i = length(vis):-1:1
             v = vis(i);
             o = objects{v};
-            
             switch o.type
-                case 1 % oval                    
-                    targetPos = [midScreen + [o.x o.y] - o.rad, ... 
-                        midScreen + [o.x o.y] + o.rad];            
+                case 1 % oval             
+                    targetPos = [midScreen + [o.x o.y] - o.rad, ...
+                        midScreen + [o.x o.y] + o.rad];
                     Screen(w,'FillOval',o.col,targetPos);
                     
-                case 10 % grating
-                    xOffset = mod(o.frame*o.shift+o.phase,o.ppc);
+                case 10 % grating                    
+                    if isscalar(o.shift) %added dynamic shift support (ACS20Feb2011)
+                        xOffset = mod(o.frame*o.shift+o.phase,o.ppc);
+                    else
+                        xOffset = mod(o.shift(o.frame+1)+o.phase,o.ppc); %don't multiply by frame b/c of cumsum in shiftFun -ACS20Feb2012
+                    end;
                     srcRect = [xOffset 0 xOffset + o.size o.size];
 
                     Screen('DrawTexture',w,o.grating,srcRect,o.dstRect,o.angle);
                     Screen('DrawTexture',w,o.mask,[0 0 o.size o.size],o.dstRect,o.angle);   
-                    
+                                       
                 case 20 % movie
                     frameNum = floor(o.frame/o.dwell) + o.startFrame;
                                
@@ -397,7 +479,7 @@ while(1)
                 objects{v}.frame = o.frame+1;
             end
         end
-    end
+    end %closes if ~isempty(vis) condition
     
     if visible(diodeObj)   
         switch diodeVal
