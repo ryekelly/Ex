@@ -13,4 +13,6 @@ pt = mean(samp(params.eyeSmoothing),1);
 
 pt = pt .* wins.pixelsPerMV + wins.midV;
 
+pt(2) = wins.voltageDim(4) - pt(2); % flip Y coordinate
+
 set(obj,'UserData',[get(obj,'UserData');pt]);

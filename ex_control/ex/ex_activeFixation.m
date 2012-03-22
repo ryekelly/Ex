@@ -94,7 +94,7 @@ function result = ex_activeFixation(e)
     end        
 
     % choose a target location randomly around a circle
-    theta = deg2rad(-1 * e.saccadeDir);
+    theta = deg2rad(e.saccadeDir);
     newX = round(e.saccadeLength * cos(theta));
     newY = round(e.saccadeLength * sin(theta));
 

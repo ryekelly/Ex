@@ -19,7 +19,8 @@ if length(calibration) > 3
     aioEyes(:,1) = [aioV ones(size(aioV,1),1)] * calibration{3};
     aioEyes(:,2) = [aioV ones(size(aioV,1),1)] * calibration{4};
 end
-   
+
+aioEyes(:,2) = -aioEyes(:,2); % flip Y coordinate
 aioEyes = aioEyes .* repmat(wins.pixelsPerPixel,size(aioEyes,1),1) + repmat(wins.midE,size(aioEyes,1),1);
 
 set(obj,'UserData',aioV(end,:));

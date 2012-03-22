@@ -2,12 +2,12 @@
 
 %%%% Settings for debugging/demo
 params.getEyes = 0; % 1 for using monkey eye movements, 0 for mouse
-params.sendingCodes = 1; % 1 for sending digital codes, 0 for none
-params.rewarding = 1; % 1 for providing rewards, 0 for none
-params.getSpikes = 1; % 1 to bring in spikes from analog input, 0 to not
+params.sendingCodes = 0; % 1 for sending digital codes, 0 for none
+params.rewarding = 0; % 1 for providing rewards, 0 for none
+params.getSpikes = 0; % 1 to bring in spikes from analog input, 0 to not
 params.writeFile = 0; % 1 to write trial data to file, 0 to not
 %
-params.ipAddress = '192.168.1.10'; % IP address of display computer
+params.ipAddress = 192.168.1.10; % IP address of display computer
 params.screenDistance = 36; % distance from eye to screen in cm
 params.pixPerCM = 27.03; % pixels per centimeter of screen
 % fixation window (pixels)
@@ -17,7 +17,7 @@ params.targWinRad = 90;
 %calibration params
 params.extent = 250; % spacing of calibration dots in pixels
 params.calibX = [-1 0 1] * params.extent;
-params.calibY = [-1 0 1] * params.extent;
+params.calibY = [1 0 -1] * params.extent;
 % juice-related params
 params.juiceX = 1; % number of times juice is repeated
 params.juiceInterval = 150; % in ms
@@ -119,7 +119,7 @@ codes.WRONG_TARG = 153 ; % Chose wrong target
 codes.BROKE_TARG = 154 ; % Left target fixation before required time
 codes.MISSED = 155 ;	% for a detection task
 codes.FALSEALARM = 156 ;
-codes.NO_CHOICE = 157 ;	% saccade to non-target / failure to leave fix window
+codes.NO_CHOICE = 157 ; % saccade to non-target / failure to leave fix window
 % touch bar / lever / button press codes would go here
 
 % OLD CODES

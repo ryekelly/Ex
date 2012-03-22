@@ -12,6 +12,11 @@ function runex(xmlFile,repeats,outfile,~)
 
 %Screen('Preference', 'SkipSyncTests', 1);
 
+% make sure behav and allCodes are empty to start (it will get loaded later
+% if you specify an outfile)
+clear global behav;
+clear global allCodes;
+
 global out aio;
 global trialSpikes trialCodes thisTrialCodes trialTic allCodes;
 global trialMessage trialData;
@@ -35,13 +40,15 @@ catch
     return;
 end
 
+% initialize variables for storing spikes, codes and behavior data
 trialSpikes = cell(length(exp),1);
 trialCodes = cell(length(exp),1);
 for i = 1:length(exp)
     trialSpikes{i} = cell(0);
     trialCodes{i} = cell(0);
 end
-allCodes = cell(0);
+allCodes = cell(0); % for storing the all the trial codes and results
+behav = struct(); % behav is a struct for user data to be written by the ex-files
 
 ListenChar(2);
 
@@ -55,6 +62,7 @@ if nargin > 2
     % check if file exists
     if exist(outfile,'file')
         load(outfile);
+        % do error-checking here to check this wasn't wrong .mat file
         warning('*** Output file exists, so it was loaded ***');
     end
 end
@@ -92,16 +100,26 @@ end
 
 trialData = cell(4,1);
 if params.getEyes
-    trialData{1} = xmlFile;
+    if params.writeFile
+        [~,outfilename,outfileext] = fileparts(outfile);
+        trialData{1} = [xmlFile ', Filename: ' outfilename outfileext];
+    else
+        trialData{1} = xmlFile;
+    end
     samp;
 else
-    trialData{1} = [xmlFile ' (MOUSE MODE)'];
+    if params.writeFile
+        [~,outfilename,outfileext] = fileparts(outfile);
+        trialData{1} = [xmlFile ' (MOUSE MODE), Filename: ' outfilename outfileext];
+    else
+        trialData{1} = [xmlFile ' (MOUSE MODE)'];
+    end
 end
 trialData{2} = '';
 trialData{3} = '';
 trialData{4} = '(s)timulus, (c)alibrate, e(x)it';
 trialData{5} = '';
-        
+      
 % Open a double buffered fullscreen window and draw a gray background 
 % to front and back buffers:
 wins.w = Screen('OpenWindow',wins.screenNumber, gray);
@@ -228,7 +246,7 @@ while 1
                 end      
                 
             else            
-                fprintf(out,'set 1 oval 0 %i %i %i 0 0 255',[posX(pt), posY(pt), wins.calibDotSize]);            
+                fprintf(out,'set 1 oval 0 %i %i %i 0 0 255',[posX(pt),posY(pt),wins.calibDotSize]);
                 fprintf(out,'all_on');
                                 
                 c = GetChar;
@@ -273,7 +291,7 @@ while 1
                     Screen('CopyWindow',wins.voltageBG,wins.voltage,wins.voltageDim,wins.voltageDim);
                 end          
                 
-                if c == ' '
+                if c == ' ' % flash the dot off for 0.25 seconds
                     fprintf(out,'obj_off 1');
                     pause(.25);
                     fprintf(out,'obj_on 1');
@@ -304,13 +322,23 @@ while 1
             params.getEyes = 0;
             samp(-4);
             aio.TimerFcn = {@plotMouse};
-            trialData{1} = [xmlFile ' (MOUSE MODE)'];
+            if params.writeFile
+                [~,outfilename,outfileext] = fileparts(outfile);
+                trialData{1} = [xmlFile ' (MOUSE MODE), Filename: ' outfilename outfileext];
+            else
+                trialData{1} = [xmlFile ' (MOUSE MODE)'];
+            end
             drawTrialData();
         else
             params.getEyes = 1;
             samp;
             aio.TimerFcn = {@plotEyes};
-            trialData{1} = xmlFile;
+            if params.writeFile
+                [~,outfilename,outfileext] = fileparts(outfile);
+                trialData{1} = [xmlFile ', Filename: ' outfilename outfileext];
+            else
+                trialData{1} = xmlFile;
+            end
             drawTrialData();
         end
     elseif c == 'l'
@@ -372,6 +400,10 @@ while 1
                 trialData{4} = 'Running stimulus...(q)uit';
                 drawTrialData();
                 
+                % setup the allCodes struct for this trial
+                allCodes{end+1} = struct();
+                allCodes{end}.startTime = datestr(now,'HH.MM.SS.FFF');
+
                 sendCode(codes.START_TRIAL);   
                 sendCode(cnd+32768); % send condition # in 32769-65535 range
                                 
@@ -431,10 +463,8 @@ while 1
                 % Global history of trial codes
                 %
                 % NOTE: These codes are all referenced relative to the time
-                % of the trial start. The "global time" is not stored.
-                % Could change this by introducing some sort of global
-                % "tic" time, but probably not worth it.
-                allCodes{end+1} = struct();
+                % of the trial start. The "global time" for the start of
+                % each trial is stored in allCodes.startTime
                 allCodes{end}.cnd = cnd;
                 allCodes{end}.trialResult = trialResult;
                 allCodes{end}.codes = thisTrialCodes;

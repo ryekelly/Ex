@@ -11,14 +11,16 @@ function trialSuccess = waitForMS(t,fixX,fixY,r)
     
 global calibration aio;
     
-    if nargin > 2
+    if nargin == 4
         drawFixationWindows(fixX,fixY,r);
+    elseif nargin ~=1
+        error('waitForMs can have exactly 1 or exactly 4 input arguments');
     end
     
     trialSuccess = 1;
     tic;
         
-    if nargin > 2           
+    if nargin == 4         
         while toc * 1000 < t
             d = get(aio,'UserData');
             eyePos(1,1) = [d(end,:) 1] * calibration{3};

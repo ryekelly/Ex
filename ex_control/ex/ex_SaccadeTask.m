@@ -33,7 +33,7 @@ function result = ex_SaccadeTask(e)
     result = 0;
     
     % take radius and angle and figure out x/y for saccade direction
-    theta = deg2rad(-1 * e.angle);
+    theta = deg2rad(e.angle);
     newX = round(e.distance*cos(theta));
     newY = round(e.distance*sin(theta));
    
