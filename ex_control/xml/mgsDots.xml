@@ -1,7 +1,7 @@
 <stimulus name="mgsDots" repeats="40" ex="ex_memoryGuidedSaccadePlusDots" bgColor="0 0 0">
     <conditions>
-        <distance>171</distance>
-        <angle>90:180:270</angle>
+        <distance>195</distance>
+        <angle>[150 330]</angle>
         <size>20</size>
     </conditions>
     <params>
@@ -11,7 +11,7 @@
         <fixColor>[0 0 255]</fixColor>
         <targetColor>[255 0 100]</targetColor>
         <timeToFix>1000</timeToFix>
-        <fixDuration>2350</fixDuration>
+        <fixDuration>1500</fixDuration>
         <targetOnsetDelay>200</targetOnsetDelay>
         <targetDuration>50</targetDuration>
         <postTargetBlank>100</postTargetBlank>

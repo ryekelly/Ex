@@ -13,7 +13,8 @@ function result = ex_memoryGuidedSaccadePlusDots(e)
 % noFixTimeout: timeout punishment for aborted trial (ms)
 % targetOnsetDelay: time after fixation before target appears
 % fixDuration: length of initial fixation required
-% targetDuration: duration that target is on screen
+% targetDuration: duration that target is on screen. set to 0 for fix only
+%   task
 % postTargetBlank: blank period after target appears but before dot movie
 % stayOnTarget: length of target fixation required
 % saccadeInitiate: maximum time allowed to leave fixation window
@@ -30,7 +31,7 @@ function result = ex_memoryGuidedSaccadePlusDots(e)
 % colorFEF: 3 element vector for the FEF dots colors [R G B]
 %
 % Last modified:
-% 2011/12/20 by Matt Smith
+% 2012/01/17 by Matt Smith
 %
 %
 
@@ -46,7 +47,7 @@ function result = ex_memoryGuidedSaccadePlusDots(e)
     newY = round(e.distance*sin(theta));
         
     waitRemainder = e.fixDuration - (e.targetOnsetDelay + e.targetDuration + e.postTargetBlank);
-    numFrames = ceil(waitRemainder*1000/params.slaveHz);
+    numFrames = ceil(waitRemainder*params.slaveHz/1000);
 
     % obj 1 is fix pt, obj 2 is target, diode attached to obj 2
     msg('set 1 oval 0 %i %i %i %i %i %i',[e.fixX e.fixY e.fixRad e.fixColor(1) e.fixColor(2) e.fixColor(3)]);
@@ -99,12 +100,45 @@ function result = ex_memoryGuidedSaccadePlusDots(e)
             result = 2;
             return;
         end
+    else
+        %%%%%%%%
+        % this is extra code to show stimulus without any saccade if you
+        % want a fixation only task
+        %%%%%%%
+        
+        % turn on dot movie
+        msgAndWait('obj_on 3');
+        sendCode(codes.STIM_ON);
+        
+        if ~waitForMS(e.fixDuration,e.fixX,e.fixY,params.fixWinRad)
+            % didn't hold fixation during stimulus
+            sendCode(codes.BROKE_FIX);
+            msgAndWait('all_off');
+            sendCode(codes.FIX_OFF);
+            waitForMS(e.noFixTimeout);
+            result = 2;
+            return;
+        end
+        
+        % turn off dots and fix point
+        msgAndWait('queue_begin');
+        msg('obj_off 3');
+        msg('obj_off 1');
+        msgAndWait('queue_end');
+        sendCode(codes.STIM_OFF);
+        sendCode(codes.FIX_OFF);
+        
+        sendCode(codes.CORRECT);
+        result = 1;
+        
+        histStop();
+        return;
     end
 
     % turn saccade target off
     msgAndWait('obj_off 2'); % if targetDuration is zero, this is unecessary
     sendCode(codes.TARG_OFF);
-
+    
     if ~waitForMS(e.postTargetBlank,e.fixX,e.fixY,params.fixWinRad)
         % didn't hold fixation during period after target offset
         sendCode(codes.BROKE_FIX);
