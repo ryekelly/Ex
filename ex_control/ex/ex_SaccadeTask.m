@@ -23,7 +23,7 @@ function result = ex_SaccadeTask(e)
 % saccadeTime: maximum time allowed to reach target
 %
 % Last modified:
-% 2011/12/20 by Matt Smith
+% 2012/03/23 by Matt Smith
 %
 %
     global params codes behav;
@@ -37,6 +37,33 @@ function result = ex_SaccadeTask(e)
     newX = round(e.distance*cos(theta));
     newY = round(e.distance*sin(theta));
    
+    % now figure out if you need to shift the fixation point around so the
+    % saccade will fit on the screen (e.g., for an 'amp' series)
+    extraborder = 10; % keep the dot from ever getting right to the edge of the screen
+    %
+    if (abs(newX) + e.size > (params.slaveWidth/2 - extraborder))
+        %disp('X exceeds limit, moving fix pt');
+        shiftX = abs(newX) + e.size - params.slaveWidth/2 + extraborder;
+        if newX > 0
+            e.fixX = e.fixX - shiftX;
+            newX = newX - shiftX;
+        else
+            e.fixX = e.fixX + shiftX;
+            newX = newX + shiftX;
+        end
+    end
+    if (abs(newY) + e.size > (params.slaveHeight/2 - extraborder))
+        %disp('Y exceeds limit, moving fix pt');
+        shiftY = abs(newY) + e.size - params.slaveHeight/2 + extraborder;
+        if newY > 0
+            e.fixY = e.fixY - shiftY;
+            newY = newY - shiftY;
+        else
+            e.fixY = e.fixY + shiftY;
+            newY = newY + shiftY;
+        end
+    end
+    
     % obj 1 is fix pt, obj 2 is target, diode attached to obj 2
     msg('set 1 oval 0 %i %i %i %i %i %i',[e.fixX e.fixY e.fixRad e.fixColor(1) e.fixColor(2) e.fixColor(3)]);
     msg('set 2 oval 0 %i %i %i %i %i %i',[newX newY e.size e.targetColor(1) e.targetColor(2) e.targetColor(3)]);

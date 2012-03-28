@@ -13,7 +13,7 @@ function drawFixationWindows(fixX,fixY,r,varargin)
 %
 % fixX, fixY and r can be vectors for multiple windows
 %
-%Modified 24Feb2012 by Adam Snyder to support multiple windows (and colors)
+%Modified 28Mar2012 by Adam Snyder to support multiple windows (and colors)
 
 global calibration wins;
    
@@ -39,7 +39,7 @@ global calibration wins;
 
             Screen('FramePoly',wins.eye,winColors(i,:),fixationWindow.*repmat(wins.pixelsPerPixel,4,1)+repmat(wins.midE,4,1));
             vPoints(:,1) = [fixationWindow ones(size(fixationWindow,1),1)] * calibration{5};
-            vPoints(:,2) = [fixationWindow ones(size(fixationWindow,1),1)] * calibration{6};
+            vPoints(:,2) = [bsxfun(@times,fixationWindow,[1 -1]) ones(size(fixationWindow,1),1)] * calibration{6};
             Screen('FramePoly',wins.voltage,winColors(i,:),vPoints);
         end;
     end
