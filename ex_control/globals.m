@@ -7,7 +7,7 @@ params.rewarding = 0; % 1 for providing rewards, 0 for none
 params.getSpikes = 0; % 1 to bring in spikes from analog input, 0 to not
 params.writeFile = 0; % 1 to write trial data to file, 0 to not
 %
-params.ipAddress = 192.168.1.10; % IP address of display computer
+params.ipAddress = '192.168.1.2'; % IP address of display computer
 params.screenDistance = 36; % distance from eye to screen in cm
 params.pixPerCM = 27.03; % pixels per centimeter of screen
 % fixation window (pixels)

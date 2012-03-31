@@ -1,4 +1,4 @@
-function msg(msg,args)
+function sent_id = msg(m,args)
 % function msg(msg,args)
 % ex helper function, sends a message to the slave and then moves on
 %
@@ -10,15 +10,20 @@ function msg(msg,args)
 % > msg('obj_on 3');
 % > msg('obj_on %i',3);
 
-global out;
+global out last_sent_msg debug;
 
+last_sent_msg = last_sent_msg + 1;
+
+s = '';
 if nargin > 1
-    fprintf(out,msg,args);
-    % uncomment for debugging
-    disp(msg);
-    disp(args);
+    s = sprintf(['%i ' m], [last_sent_msg args]);
 else
-    fprintf(out,msg);
-    % uncomment for debugging
-    disp(msg);
+    s = sprintf(['%i ' m], last_sent_msg);
 end
+
+if debug
+    disp(sprintf('Sent: %s', s))
+end
+fprintf(out, s);
+
+sent_id = last_sent_msg;

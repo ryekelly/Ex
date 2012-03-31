@@ -22,6 +22,14 @@ global trialSpikes trialCodes thisTrialCodes trialTic allCodes;
 global trialMessage trialData;
 global wins params codes calibration stats;
 global behav;
+global last_sent_msg last_received_msg;
+global debug;
+global timeout;
+
+timeout = 1;
+debug = 1;
+last_sent_msg = 0;
+last_received_msg = 0;
 
 % check first that you're in a location where there are 'ex' and 'xml'
 % subdirectories
@@ -205,7 +213,7 @@ while 1
         
         while pt <= length(posX) + 1
             if pt > length(posX)
-                fprintf(out,'all_off');
+                msg('all_off');
                 trialData{4} = '(f)inished calibration, (b)ack up, (q)uit, (j)uice';
                 drawTrialData();
 
@@ -246,8 +254,8 @@ while 1
                 end      
                 
             else            
-                fprintf(out,'set 1 oval 0 %i %i %i 0 0 255',[posX(pt),posY(pt),wins.calibDotSize]);
-                fprintf(out,'all_on');
+                msg('set 1 oval 0 %i %i %i 0 0 255',[posX(pt),posY(pt),wins.calibDotSize]);
+                msg('all_on');
                                 
                 c = GetChar;
                 while (c == 'j' || c == 'c')
@@ -292,9 +300,9 @@ while 1
                 end          
                 
                 if c == ' ' % flash the dot off for 0.25 seconds
-                    fprintf(out,'obj_off 1');
+                    msg('obj_off 1');
                     pause(.25);
-                    fprintf(out,'obj_on 1');
+                    msg('obj_on 1');
                 end
             end
         end
@@ -309,7 +317,7 @@ while 1
         trialData{4} = '(s)timulus, (c)alibrate, e(x)it';
         drawTrialData();
 
-        fprintf(out,'all_off');            
+        msg('all_off');            
     elseif c == 'x'
         break;
     elseif c == '1' || c == '2' || c == '3' || c == '4' || c =='5' || c == '6' || c == '7' 
@@ -344,16 +352,21 @@ while 1
     elseif c == 'l'
         Screen('CopyWindow',wins.voltageBG,wins.voltage,wins.voltageDim,wins.voltageDim);
         Screen('CopyWindow',wins.eyeBG,wins.eye,wins.eyeDim,wins.eyeDim);                    
-    elseif c == 's'
+    elseif c == 's'        
         % set the background color here
         msg('bg_color %s',eParams.bgColor);
-        msgAndWait('ack');
-
+        [~, error_code] = waitFor(last_sent_msg);
+        if error_code == 1
+            trialData{2} = 'Cannot contact display machine!';
+            drawTrialData();
+            continue;
+        end
         % get some basic info from the slave about display properties
         msg('framerate');
-        params.slaveFrameTime = str2double(waitFor());        
+        fr = waitFor(last_sent_msg);
+        params.slaveFrameTime = str2double(fr);
         msg('resolution');
-        tstr = waitFor();
+        tstr = waitFor(last_sent_msg)
         ts = textscan(tstr,'');
         params.slaveWidth = ts{1};
         params.slaveHeight = ts{2};
@@ -374,7 +387,7 @@ while 1
             return;
         end
         
-        fprintf(out,'stim');
+        msg('stim');
         
         trialMessage = 0;
 
@@ -435,20 +448,27 @@ while 1
                     stats(trialResult) = stats(trialResult) + 1;
                     trialData{5} = sprintf('%i good, %i bad, %i abort',stats);
                 catch err
-                    trialData{5} = 'Error in ex file, quit to diagnose.';
                     trialResult = 0;
-                    trialMessage = -1;
-                    drawTrialData();
-                    disp(['************ ERROR: ' err.message ' **********']);
-                    for i = 1:length(err.stack)
-                        disp(sprintf('%s %s %s %i',repmat(' ',i,1),err.stack(i).file,err.stack(i).name,err.stack(i).line));
+                    if strcmp(err.identifier,'MSG:TIMEOUT') || strcmp(err.identifier,'MSG:BAD_ID')
+                        trialData{5} = err.message;
+                        drawTrialData();
+                    else
+                        trialData{5} = 'Error in ex file, quit to diagnose.';
+                        disp(['************ ERROR: ' err.message ' **********']);
+                        for i = 1:length(err.stack)
+                            disp(sprintf('%s %s %s %i',repmat(' ',i,1),err.stack(i).file,err.stack(i).name,err.stack(i).line));
+                        end
+                        trialMessage = -1;
+                        beep;
                     end
-                    beep;
+                    drawTrialData();                    
                 end
                
                 msg('all_off');
-                msgAndWait('rem_all');
                 
+                msg('rem_all');
+                waitFor(last_sent_msg);
+
                 if trialResult == 1
                     sendCode(codes.REWARD);
                     giveJuice();
@@ -475,6 +495,8 @@ while 1
                 if params.writeFile
                     save(outfile,'allCodes','behav');
                 end
+
+                keyboardEvents();
                 
                 if trialMessage == -1
                     break;
@@ -489,7 +511,7 @@ while 1
             
             currentBlock = currentBlock + 1;
         end
-        fprintf(out,'q');        
+        msg('q');        
         trialData{4} = '(s)timulus, (c)alibrate, e(x)it';
         drawTrialData();
     end
@@ -506,6 +528,8 @@ delete(out);
 ListenChar(0);
 
 % stop sampling analog inputs and free memory
-samp(-4);
+if params.getEyes
+  samp(-4);
+end
 
 end

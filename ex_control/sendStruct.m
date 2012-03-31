@@ -5,6 +5,8 @@
 %
 function sendStruct(s)
 
+global params
+
 fields = fieldnames(s);
 
 for i = 1:length(fields)
@@ -13,5 +15,7 @@ for i = 1:length(fields)
     %m = double([fields{i} '=' val])*256;
     %digCode([m 256]);
     m = double([fields{i} '=' val ';'])+256;
-    digCode(m);
+    if params.sendingCodes
+        digCode(m);
+    end
 end

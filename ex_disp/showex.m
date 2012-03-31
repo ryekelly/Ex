@@ -69,11 +69,13 @@ screenCleared = 1;
 while(1)
     % received network message
     if get(u,'BytesAvailable') > 0
-        [s1 s] = strtok(fgetl(u));
-                
+        [id s_msg] = strtok(fgetl(u));
+        [s1 s] = strtok(s_msg);  
+        
         %for debugging use this line
-        disp([s1 s]);
-
+        disp([id s_msg]);
+        return_msg = '';
+        
         switch s1
             case 'set' 
                 [objID withoutID] = strtok(s);
@@ -411,11 +413,11 @@ while(1)
                 diodeObj = str2double(s);
                 
             case 'framerate'
-                s1 = Screen('GetFlipInterval',w);
+                return_msg = Screen('GetFlipInterval',w);
 
             case 'resolution'
                 res = Screen('Resolution',w);
-                s1 = [num2str(res.width),' ',num2str(res.height),' ',num2str(res.pixelSize),' ',num2str(res.hz)];
+                return_msg = [num2str(res.width),' ',num2str(res.height),' ',num2str(res.pixelSize),' ',num2str(res.hz)];
                 
             case 'screen'
                 args = textscan(s,'%n');
@@ -424,7 +426,7 @@ while(1)
                 ppd = tan(degtorad(1)) * scrd * pixpercm; % pixels per degree
         end
         
-        fprintf(u,s1);
+        fprintf(u,[id ' ' return_msg]);
     end
     
     vis = find(visible);
