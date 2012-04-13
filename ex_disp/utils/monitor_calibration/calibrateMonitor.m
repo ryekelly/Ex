@@ -1,4 +1,8 @@
+%function calibVals = calibrateMonitor(vals,color,size,portstring)
+% OR:
+%function calibVals = calibrateMonitor(vals)
 %function calibVals = calibrateMonitor(vals,color)
+%function calibVals = calibrateMonitor(vals,color,size)
 %
 % This function will display different gray levels on the screen and
 % communicate with a UDT 471 photometer over the serial port to read
@@ -10,28 +14,64 @@
 %
 % The input "color" can be 'gray', 'red', 'green', or 'blue' (default is
 % gray if no parameter is passed), and this determines the color to be
-% calibrated. If 'other' is used, 
+% calibrated. If 'other' is used, you specify your own 3xN list of rgb
+% values. If no color is specified, 'gray' is the default.
 %
-% e.g., lum = calibrateMonitors(0:255,'gray');
+% Size can be -1 if you want it full screen, otherwise it's the
+% half-diameter of the rectangle. If no size is specified, full screen is
+% the default.
+%
+% The serial port string for opening (e.g., '/dev/ttyS0'). If no string is
+% specified, it assumes '/dev/cu.KeySerial1' on the mac and '/dev/ttyS0/'
+% on Linux.
+%
+% e.g., lum = calibrateMonitor(0:255,'gray');
 %
 % NOTE: If the program hangs there's a good chance that your photometer is
 % not powered on, which will cause the serial port calls to hang.
 %
+% NOTE: This program waits 5 seconds between luminance changes to let the
+% value on the UDT 471 stabilize. You can read faster than that for
+% testing, but I've found 5 seconds to be a good choice for the final
+% calibration measurements.
+%
+% Matthew A. Smith
+% Revised: 20120413
 
-function calibVals = calibrateMonitor(vals,color)
+function calibVals = calibrateMonitor(vals,color,size,portstring)
 
 if (nargin < 2)
     color = 'gray';
 end
 
-delete(instrfind)
+delete(instrfind);
 
-out = serial('/dev/cu.KeySerial1');
+ctype = computer('arch');
+
+if (nargin < 4)
+    if (strcmp(ctype,'maci') || strcmp(ctype,'maci64'))
+        % For Mac Pro with Keyspan USB Serial Installed
+        display('Mac detected - opening serial port /dev/cu.KeySerial1');
+        out = serial('/dev/cu.KeySerial1');
+    elseif (strcmp(ctype,'glnx86') || strcmp(ctype,'glnxa64'))
+        % For Linux machine with native serial port on motherboard. Just call the
+        % serial command with an invalid param to get the list of possible serial
+        % ports (/dev/ttyS*)
+        display('Linux detected - opening serial port /dev/ttyS0');
+        out = serial('/dev/ttyS0');
+    else
+        error('Computer architecture not recognized - default serial port options only specified on Mac and Linux');
+    end
+else
+    % serial port string specified in function call
+    out = portstring;
+end
+
 fopen(out);
 
-Screen('LoadNormalizedGammaTable',0);
-
 w = Screen('OpenWindow',0);
+LoadIdentityClut(w);
+
 Screen(w,'FillRect',0);
 
 Screen('Flip',w);
@@ -60,8 +100,17 @@ elseif (strcmp(color,'other'))
 end
 
 for i = 1:length(vals)
-%    Screen(w,'FillRect',vals(i),[5 100 200 200]);
-    Screen(w,'FillRect',rgbvals(:,i));
+    if (nargin < 3) % no size specified in function call
+        Screen(w,'FillRect',rgbvals(:,i));
+    else
+        res = Screen('Resolution',w);
+        ctrx = round(res.width/2);
+        ctry = round(res.height/2);
+        % draw background as mean gray
+        Screen(w,'FillRect',[128 128 128]);
+        % draw square on top
+        Screen(w,'FillRect',rgbvals(:,i),[ctrx-size ctry-size ctrx+size ctry+size]);
+    end
     Screen('DrawText',w,num2str(rgbvals(:,i)'),100,100);
     Screen('Flip',w);
        
