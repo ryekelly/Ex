@@ -22,14 +22,6 @@ global trialSpikes trialCodes thisTrialCodes trialTic allCodes;
 global trialMessage trialData;
 global wins params codes calibration stats;
 global behav;
-global last_sent_msg last_received_msg;
-global debug;
-global timeout;
-
-timeout = 1;
-debug = 1;
-last_sent_msg = 0;
-last_received_msg = 0;
 
 % check first that you're in a location where there are 'ex' and 'xml'
 % subdirectories
@@ -63,6 +55,7 @@ ListenChar(2);
 wins = struct();
 stats = zeros(3,1);
 
+% Load global variables
 globals;
 
 if nargin > 2
@@ -85,8 +78,15 @@ delete(timerfindall)
 
 %daqreset;
 FlushEvents;
+
+% load stored calibration file
 load calibration;
-% load dailyglobals
+% This makes sure that the calibration values are stored with the
+% data (via the sendStruct call)
+params.calibPixX = calibration{1}(:,1)';
+params.calibPixY = calibration{1}(:,2)';
+params.calibVoltX = calibration{2}(:,1)';
+params.calibVoltY = calibration{2}(:,2)';
 
 ordering = [];
 currentBlock = 1;
@@ -213,7 +213,7 @@ while 1
         
         while pt <= length(posX) + 1
             if pt > length(posX)
-                msg('all_off');
+                fprintf(out,'all_off');
                 trialData{4} = '(f)inished calibration, (b)ack up, (q)uit, (j)uice';
                 drawTrialData();
 
@@ -254,8 +254,8 @@ while 1
                 end      
                 
             else            
-                msg('set 1 oval 0 %i %i %i 0 0 255',[posX(pt),posY(pt),wins.calibDotSize]);
-                msg('all_on');
+                fprintf(out,'set 1 oval 0 %i %i %i 0 0 255',[posX(pt),posY(pt),wins.calibDotSize]);
+                fprintf(out,'all_on');
                                 
                 c = GetChar;
                 while (c == 'j' || c == 'c')
@@ -300,13 +300,20 @@ while 1
                 end          
                 
                 if c == ' ' % flash the dot off for 0.25 seconds
-                    msg('obj_off 1');
+                    fprintf(out,'obj_off 1');
                     pause(.25);
-                    msg('obj_on 1');
+                    fprintf(out,'obj_on 1');
                 end
             end
         end
-
+        
+        % This makes sure that the calibration values are stored with the
+        % data (via the sendStruct call)
+        params.calibPixX = calibration{1}(:,1)';
+        params.calibPixY = calibration{1}(:,2)';
+        params.calibVoltX = calibration{2}(:,1)';
+        params.calibVoltY = calibration{2}(:,2)';
+        % do the linear regression of Pixels vs. Voltage
         calibration{3} = regress(calibration{1}(:,1), [calibration{2} ones(size(calibration{2},1),1)]);
         calibration{4} = regress(calibration{1}(:,2), [calibration{2} ones(size(calibration{2},1),1)]);
         calibration{5} = regress(calibration{2}(:,1), [calibration{1} ones(size(calibration{1},1),1)]);
@@ -317,7 +324,7 @@ while 1
         trialData{4} = '(s)timulus, (c)alibrate, e(x)it';
         drawTrialData();
 
-        msg('all_off');            
+        fprintf(out,'all_off');            
     elseif c == 'x'
         break;
     elseif c == '1' || c == '2' || c == '3' || c == '4' || c =='5' || c == '6' || c == '7' 
@@ -352,21 +359,16 @@ while 1
     elseif c == 'l'
         Screen('CopyWindow',wins.voltageBG,wins.voltage,wins.voltageDim,wins.voltageDim);
         Screen('CopyWindow',wins.eyeBG,wins.eye,wins.eyeDim,wins.eyeDim);                    
-    elseif c == 's'        
+    elseif c == 's'
         % set the background color here
         msg('bg_color %s',eParams.bgColor);
-        [~, error_code] = waitFor(last_sent_msg);
-        if error_code == 1
-            trialData{2} = 'Cannot contact display machine!';
-            drawTrialData();
-            continue;
-        end
+        msgAndWait('ack');
+
         % get some basic info from the slave about display properties
         msg('framerate');
-        fr = waitFor(last_sent_msg);
-        params.slaveFrameTime = str2double(fr);
+        params.slaveFrameTime = str2double(waitFor());        
         msg('resolution');
-        tstr = waitFor(last_sent_msg)
+        tstr = waitFor();
         ts = textscan(tstr,'');
         params.slaveWidth = ts{1};
         params.slaveHeight = ts{2};
@@ -379,15 +381,23 @@ while 1
         % send the eParams and params here, since we don't need 
         % them every trial. use catStruct so duplicate names produce an
         % error. use try/catch so errors exit gracefully.
+
+        % set the trialTic here and initialize thisTrialCodes so that this 
+        % first sendStruct call has valid times and stores the codes
+        % properly. the flag keeps us from resetting the tic below for just
+        % this one trial
+        trialTic = tic;
+        thisTrialCodes = [];
+        resetTicFlag = 0;
+
         try
             sendStruct(catstruct(eParams,params,'sorted'));        
-        catch
-            disp('Error combining eParams and params: duplicate field name');
+        catch ME
             Screen('CloseAll');
-            return;
+            throw(ME);
         end
         
-        msg('stim');
+        fprintf(out,'stim');
         
         trialMessage = 0;
 
@@ -405,8 +415,14 @@ while 1
                 currentTrial = ceil(length(ordering)*rand(1));
                 cnd = ordering(currentTrial);
                 drawHistogram(cnd);
-                trialTic = tic;
-                thisTrialCodes = [];
+                % only set the trialTic for trials that aren't immediately
+                % following the 's' command
+                if resetTicFlag
+                    trialTic = tic;
+                    thisTrialCodes = [];
+                else
+                    resetTicFlag = 1;
+                end
                 
                 trialData{2} = sprintf('Block %i/%i',j,eParams.rpts);
                 trialData{3} = sprintf('Trial %i/%i, condition %i',length(exp)-length(ordering)+1,length(exp),cnd);
@@ -415,6 +431,9 @@ while 1
                 
                 % setup the allCodes struct for this trial
                 allCodes{end+1} = struct();
+                % This value should be as close as possible to the time
+                % that code 1 is sent, thus allowing us to recreate global
+                % time.
                 allCodes{end}.startTime = datestr(now,'HH.MM.SS.FFF');
 
                 sendCode(codes.START_TRIAL);   
@@ -436,10 +455,10 @@ while 1
                 % e and eParams
                 try
                     e = catstruct(e,eParams);
-                catch
+                catch ME
                     disp('Error combining e and eParams: duplicate field name');
                     Screen('CloseAll');
-                    return;
+                    throw(ME);
                 end
                 
                 try
@@ -448,27 +467,20 @@ while 1
                     stats(trialResult) = stats(trialResult) + 1;
                     trialData{5} = sprintf('%i good, %i bad, %i abort',stats);
                 catch err
+                    trialData{5} = 'Error in ex file, quit to diagnose.';
                     trialResult = 0;
-                    if strcmp(err.identifier,'MSG:TIMEOUT') || strcmp(err.identifier,'MSG:BAD_ID')
-                        trialData{5} = err.message;
-                        drawTrialData();
-                    else
-                        trialData{5} = 'Error in ex file, quit to diagnose.';
-                        disp(['************ ERROR: ' err.message ' **********']);
-                        for i = 1:length(err.stack)
-                            disp(sprintf('%s %s %s %i',repmat(' ',i,1),err.stack(i).file,err.stack(i).name,err.stack(i).line));
-                        end
-                        trialMessage = -1;
-                        beep;
+                    trialMessage = -1;
+                    drawTrialData();
+                    disp(['************ ERROR: ' err.message ' **********']);
+                    for i = 1:length(err.stack)
+                        disp(sprintf('%s %s %s %i',repmat(' ',i,1),err.stack(i).file,err.stack(i).name,err.stack(i).line));
                     end
-                    drawTrialData();                    
+                    beep;
                 end
                
                 msg('all_off');
+                msgAndWait('rem_all');
                 
-                msg('rem_all');
-                waitFor(last_sent_msg);
-
                 if trialResult == 1
                     sendCode(codes.REWARD);
                     giveJuice();
@@ -483,8 +495,10 @@ while 1
                 % Global history of trial codes
                 %
                 % NOTE: These codes are all referenced relative to the time
-                % of the trial start. The "global time" for the start of
-                % each trial is stored in allCodes.startTime
+                % of the trial start (code '1') because of the first line
+                % below. The "global time" for the start of each trial is 
+                % stored in allCodes.startTime
+                thisTrialCodes(:,2) = thisTrialCodes(:,2) - thisTrialCodes(find(thisTrialCodes(:,1)==1,1,'first'),2);                
                 allCodes{end}.cnd = cnd;
                 allCodes{end}.trialResult = trialResult;
                 allCodes{end}.codes = thisTrialCodes;
@@ -495,8 +509,6 @@ while 1
                 if params.writeFile
                     save(outfile,'allCodes','behav');
                 end
-
-                keyboardEvents();
                 
                 if trialMessage == -1
                     break;
@@ -511,7 +523,7 @@ while 1
             
             currentBlock = currentBlock + 1;
         end
-        msg('q');        
+        fprintf(out,'q');        
         trialData{4} = '(s)timulus, (c)alibrate, e(x)it';
         drawTrialData();
     end
@@ -528,8 +540,6 @@ delete(out);
 ListenChar(0);
 
 % stop sampling analog inputs and free memory
-if params.getEyes
-  samp(-4);
-end
+samp(-4);
 
 end
