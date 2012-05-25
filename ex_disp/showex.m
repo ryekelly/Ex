@@ -147,6 +147,11 @@ while(1)
                             alldotRad = alldotRad .* ppd;
                             %%%%%% end scalediam function %%%%%%
                             
+                            % this catches the case where the dot is at 0,0
+                            if (sum(isnan(alldotRad)) > 0)
+                                alldotRad(find(isnan(alldotRad))) = 0;
+                            end
+                            
                             dotPositions(1,:,i) = xPos - alldotRad;
                             dotPositions(2,:,i) = yPos - alldotRad;
                             dotPositions(3,:,i) = xPos + alldotRad;
