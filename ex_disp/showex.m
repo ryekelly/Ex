@@ -69,13 +69,11 @@ screenCleared = 1;
 while(1)
     % received network message
     if get(u,'BytesAvailable') > 0
-        [id s_msg] = strtok(fgetl(u));
-        [s1 s] = strtok(s_msg);  
-        
+        [s1 s] = strtok(fgetl(u));
+                
         %for debugging use this line
-        disp([id s_msg]);
-        return_msg = '';
-        
+        disp([s1 s]);
+
         switch s1
             case 'set' 
                 [objID withoutID] = strtok(s);
@@ -146,7 +144,7 @@ while(1)
                             alldotRad = sqrt(((dotRad./ppd)^2)./M); % dot radii
                             alldotRad = alldotRad .* ppd;
                             %%%%%% end scalediam function %%%%%%
-                            
+
                             % this catches the case where the dot is at 0,0
                             if (sum(isnan(alldotRad)) > 0)
                                 alldotRad(find(isnan(alldotRad))) = 0;
@@ -418,11 +416,11 @@ while(1)
                 diodeObj = str2double(s);
                 
             case 'framerate'
-                return_msg = Screen('GetFlipInterval',w);
+                s1 = Screen('GetFlipInterval',w);
 
             case 'resolution'
                 res = Screen('Resolution',w);
-                return_msg = [num2str(res.width),' ',num2str(res.height),' ',num2str(res.pixelSize),' ',num2str(res.hz)];
+                s1 = [num2str(res.width),' ',num2str(res.height),' ',num2str(res.pixelSize),' ',num2str(res.hz)];
                 
             case 'screen'
                 args = textscan(s,'%n');
@@ -431,7 +429,7 @@ while(1)
                 ppd = tan(degtorad(1)) * scrd * pixpercm; % pixels per degree
         end
         
-        fprintf(u,[id ' ' return_msg]);
+        fprintf(u,s1);
     end
     
     vis = find(visible);
@@ -543,4 +541,3 @@ function cleanUpObj(o)
             Screen('Close',o.mask);            
     end
 end
-
