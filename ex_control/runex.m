@@ -17,7 +17,7 @@ function runex(xmlFile,repeats,outfile,~)
 clear global behav;
 clear global allCodes;
 
-global out aio;
+global aio;
 global trialSpikes trialCodes thisTrialCodes trialTic allCodes;
 global trialMessage trialData;
 global wins params codes calibration stats;
@@ -95,9 +95,10 @@ AssertOpenGL;
 delete(instrfind);
 
 % Connect to serial device on COM1
-out = udp(params.ipAddress,'RemotePort',8866,'LocalPort',8844);
-fopen(out);
-
+%out = udp(params.ipAddress,'RemotePort',8866,'LocalPort',8844);
+%fopen(out);
+local_ip = char(java.net.InetAddress.getLocalHost.getHostAddress);
+matlabUDP('open', local_ip, params.ipAddress, 4243)
 % Find the values of black and white
 white=WhiteIndex(wins.screenNumber);
 black=BlackIndex(wins.screenNumber);
@@ -213,7 +214,7 @@ while 1
         
         while pt <= length(posX) + 1
             if pt > length(posX)
-                fprintf(out,'all_off');
+                matlabUDP('send', 'all_off');
                 trialData{4} = '(f)inished calibration, (b)ack up, (q)uit, (j)uice';
                 drawTrialData();
 
@@ -254,8 +255,8 @@ while 1
                 end      
                 
             else            
-                fprintf(out,'set 1 oval 0 %i %i %i 0 0 255',[posX(pt),posY(pt),wins.calibDotSize]);
-                fprintf(out,'all_on');
+                matlabUDP('send', sprintf('set 1 oval 0 %i %i %i 0 0 255',[posX(pt),posY(pt),wins.calibDotSize]));
+                matlabUDP('send', 'all_on');
                                 
                 c = GetChar;
                 while (c == 'j' || c == 'c')
@@ -300,9 +301,9 @@ while 1
                 end          
                 
                 if c == ' ' % flash the dot off for 0.25 seconds
-                    fprintf(out,'obj_off 1');
+                    matlabUDP('send', 'obj_off 1');
                     pause(.25);
-                    fprintf(out,'obj_on 1');
+                    matlabUDP('send', 'obj_on 1');
                 end
             end
         end
@@ -324,7 +325,7 @@ while 1
         trialData{4} = '(s)timulus, (c)alibrate, e(x)it';
         drawTrialData();
 
-        fprintf(out,'all_off');            
+        matlabUDP('send', 'all_off');            
     elseif c == 'x'
         break;
     elseif c == '1' || c == '2' || c == '3' || c == '4' || c =='5' || c == '6' || c == '7' 
@@ -368,7 +369,7 @@ while 1
         msg('framerate');
         params.slaveFrameTime = str2double(waitFor());        
         msg('resolution');
-        tstr = waitFor();
+        tstr = waitFor()
         ts = textscan(tstr,'');
         params.slaveWidth = ts{1};
         params.slaveHeight = ts{2};
@@ -397,7 +398,7 @@ while 1
             throw(ME);
         end
         
-        fprintf(out,'stim');
+        matlabUDP('send', 'stim');
         
         trialMessage = 0;
 
@@ -523,7 +524,7 @@ while 1
             
             currentBlock = currentBlock + 1;
         end
-        fprintf(out,'q');        
+        matlabUDP('send', 'q');        
         trialData{4} = '(s)timulus, (c)alibrate, e(x)it';
         drawTrialData();
     end
@@ -534,12 +535,13 @@ Screen('CloseAll');
 clear aio;
 clear plotter;
 
-fclose(out);
-delete(out);
+matlabUDP('close');
 
 ListenChar(0);
 
 % stop sampling analog inputs and free memory
-samp(-4);
+if params.getEyes
+    samp(-4);
+end
 
 end

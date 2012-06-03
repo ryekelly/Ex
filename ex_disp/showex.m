@@ -7,6 +7,10 @@ function showex(ipAddress)
 %
 %
 
+while CharAvail;
+    GetChar;
+end
+
 global u;
 global objects;
 
@@ -21,8 +25,10 @@ vals = makeGammaTable(gam(:,1),gam(:,2));
 Screen('LoadNormalizedGammaTable', 0, vals);
 
 delete(instrfind)
-u = udp(ipAddress,'RemotePort',8844,'LocalPort',8866);
-fopen(u);
+%u = udp(ipAddress,'RemotePort',8844,'LocalPort',8866);
+%fopen(u);
+local_ip = char(java.net.InetAddress.getLocalHost.getHostAddress);
+matlabUDP('open', local_ip, ipAddress, 4243);
 
 % specifies size and location of photodiode square:
 % upper left of screen, 50 x 50 pixels
@@ -68,11 +74,11 @@ screenCleared = 1;
 
 while(1)
     % received network message
-    if get(u,'BytesAvailable') > 0
-        [s1 s] = strtok(fgetl(u));
+    if matlabUDP('check')
+        [s1 s] = strtok(matlabUDP('receive'));
                 
         %for debugging use this line
-        disp([s1 s]);
+%        disp([s1 s]);
 
         switch s1
             case 'set' 
@@ -416,7 +422,7 @@ while(1)
                 diodeObj = str2double(s);
                 
             case 'framerate'
-                s1 = Screen('GetFlipInterval',w);
+                s1 = sprintf('%.6f', Screen('GetFlipInterval',w));
 
             case 'resolution'
                 res = Screen('Resolution',w);
@@ -429,7 +435,7 @@ while(1)
                 ppd = tan(degtorad(1)) * scrd * pixpercm; % pixels per degree
         end
         
-        fprintf(u,s1);
+        matlabUDP('send', s1);
     end
     
     vis = find(visible);
@@ -479,7 +485,8 @@ while(1)
                 cleanUpObj(o);
                 objects{v} = [];
 %                diodeVal = 255;
-                fprintf(u,'done %i',v);
+                matlabUDP('send', sprintf('done %i', v));
+                %fprintf(u,'done %i',v);
             else
                 objects{v}.frame = o.frame+1;
             end
@@ -522,7 +529,7 @@ while(1)
     end
        
     % check for keyboard input
-    if KbCheck
+    if CharAvail
         c = GetChar;
         if c == 'x'
             break;     

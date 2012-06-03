@@ -9,12 +9,12 @@ function trialSuccess = waitForSlave(fixX,fixY,r)
 % fixX, fixY: in pixels, the offset of the fixation from (0,0)
 % r: in pixels, the radius of the fixation window
 
-global calibration aio out;
+global calibration aio;
     
     drawFixationWindows(fixX,fixY,r);
     
     trialSuccess = 1;
-    while get(out,'BytesAvailable') == 0                
+    while ~matlabUDP('check')
         d = get(aio,'UserData');
         eyePos(1,1) = [d(end,:) 1] * calibration{3};
         eyePos(1,2) = [d(end,:) 1] * calibration{4};
