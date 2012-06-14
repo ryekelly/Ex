@@ -1,16 +1,15 @@
 /* MATLABUDP.C
  *
  *	MATLABUDP.c contains a few c-routines
- *	to be called from MATLAB so that dotsX machines can chat via
- *	ethernet and the UDP/IP protocols.
+ *	to be called from MATLAB so that the ex_control and ex_display
+ *  machines can chat via ethernet and the UDP/IP protocols.
  *
- *  This is as close as possible to the code in matlabUDP.c on the
- *  REX machine.  The only real difference is that we have to implement
- *  the mexFunction interface for MATLAB.  Also, we need to accept init args
- *  from MATLAB because this code need to be somewhat portable.
- *
- *
- *	BSH 20 Jan 2006
+ *  This is modified from matlabUDP.c written by Ben Heasly in Josh Gold's
+ *  lab at UPenn. Ryan Kelly changed it to work with Windows XP in May 2012.
+ * 
+ *  Compile with something like this:
+ *  mex matlabUDP.c 'C:\Program Files\MATLAB\R2010b\sys\lcc\lib\wsock32.lib'
+ *  [need to use Lcc, not watcom]
  */
 
 #include "matlabUDP.h"

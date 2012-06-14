@@ -27,8 +27,8 @@ Screen('LoadNormalizedGammaTable', 0, vals);
 delete(instrfind)
 %u = udp(ipAddress,'RemotePort',8844,'LocalPort',8866);
 %fopen(u);
-local_ip = char(java.net.InetAddress.getLocalHost.getHostAddress);
-matlabUDP('open', local_ip, ipAddress, 4243);
+%local_ip = char(java.net.InetAddress.getLocalHost.getHostAddress);
+matlabUDP('open','192.168.1.10', ipAddress, 4243);
 
 % specifies size and location of photodiode square:
 % upper left of screen, 50 x 50 pixels
@@ -78,7 +78,7 @@ while(1)
         [s1 s] = strtok(matlabUDP('receive'));
                 
         %for debugging use this line
-%        disp([s1 s]);
+        disp([s1 s]);
 
         switch s1
             case 'set' 

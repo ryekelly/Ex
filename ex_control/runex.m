@@ -97,8 +97,8 @@ delete(instrfind);
 % Connect to serial device on COM1
 %out = udp(params.ipAddress,'RemotePort',8866,'LocalPort',8844);
 %fopen(out);
-local_ip = char(java.net.InetAddress.getLocalHost.getHostAddress);
-matlabUDP('open', local_ip, params.ipAddress, 4243)
+%local_ip = char(java.net.InetAddress.getLocalHost.getHostAddress);
+matlabUDP('open',params.controlIP,params.displayIP, 4243)
 % Find the values of black and white
 white=WhiteIndex(wins.screenNumber);
 black=BlackIndex(wins.screenNumber);
@@ -369,7 +369,7 @@ while 1
         msg('framerate');
         params.slaveFrameTime = str2double(waitFor());        
         msg('resolution');
-        tstr = waitFor()
+        tstr = waitFor();
         ts = textscan(tstr,'');
         params.slaveWidth = ts{1};
         params.slaveHeight = ts{2};

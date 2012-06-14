@@ -2,12 +2,13 @@
 
 %%%% Settings for debugging/demo
 params.getEyes = 0; % 1 for using monkey eye movements, 0 for mouse
-params.sendingCodes = 0; % 1 for sending digital codes, 0 for none
-params.rewarding = 0; % 1 for providing rewards, 0 for none
-params.getSpikes = 0; % 1 to bring in spikes from analog input, 0 to not
+params.sendingCodes = 1; % 1 for sending digital codes, 0 for none
+params.rewarding = 1; % 1 for providing rewards, 0 for none
+params.getSpikes = 1; % 1 to bring in spikes from analog input, 0 to not
 params.writeFile = 0; % 1 to write trial data to file, 0 to not
 %
-params.ipAddress = '192.168.1.8'; % IP address of display computer
+params.controlIP = '192.168.1.11'; % IP address of control computer
+params.displayIP = '192.168.1.10'; % IP address of display computer
 params.screenDistance = 36; % distance from eye to screen in cm
 params.pixPerCM = 27.03; % pixels per centimeter of screen
 % fixation window (pixels)
