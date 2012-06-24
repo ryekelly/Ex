@@ -22,7 +22,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             char remote[16];
         int dims[2],i;
         unsigned short *outPtr;
-    
+    WSADATA WSA_Data;
+        
     // If no arguments given, print usage string
     if(nrhs < 1) {
         mexPrintf("matlabUDP usage:\n socketIsOpen = matlabUDP('open', (string)localIP, (string)remoteIP, (int)port);%% should return small int\n matlabUDP('send', (string)message);\n messageIsAvailable = matlabUDP('check');\n message = matlabUDP('receive');\n socketIsOpen = matlabUDP('close');%% should return -1\n");
@@ -43,6 +44,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     if(!strncmp(command, "open", 3)) {
         // done with command
         mxFree(command);
+       
+        if (WSAStartup(0x101, &w)) {
+            mexErrMsgTxt("Failed.");
+        }
         
         // register exit routine to free socket
         if(mexAtExit(mat_UDP_close) != 0 ) {
@@ -59,7 +64,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
             // close old socket?
 //            if(mat_UDP_sockfd>=0) {
-                mat_UDP_close();
+   //             mat_UDP_close();
 //            }
             //format args for socket opener function
             mxGetString(prhs[1],local,16);
@@ -143,7 +148,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     } else {
         // done with command
         mxFree(command);
-        
         mexWarnMsgTxt("matlabUDP: Unknown command option");
     }
 }
@@ -151,11 +155,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 //initialize UDP socket
 void mat_UDP_open (char localIP[], char remoteIP[], int port){
     int a1, a2, a3, a4, b1, b2, b3, b4;
-        
+    char errMsg[50];
+    
     sscanf(localIP, "%d.%d.%d.%d", &a1, &a2, &a3, &a4);
     sscanf(remoteIP, "%d.%d.%d.%d", &b1, &b2, &b3, &b4);
-    if ((mat_UDP_sockfd=socket(AF_INET, SOCK_DGRAM, 0)) == INVALID_SOCKET) {
-        mexErrMsgTxt("Couldn't create UDP socket.");
+    if ((mat_UDP_sockfd=socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == INVALID_SOCKET) {
+        sprintf(errMsg, "Couldn't create UDP socket: %i", WSAGetLastError());
+        mexErrMsgTxt(errMsg);
     }
 
     memset((void *)&mat_UDP_REMOTE_addr, '\0', sizeof(struct sockaddr_in));
