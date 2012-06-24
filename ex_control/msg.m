@@ -22,4 +22,5 @@ end
 if debug
     disp(sprintf('Sent: %s', s))
 end
+
 matlabUDP('send', s);
