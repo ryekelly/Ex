@@ -9,78 +9,182 @@ function runex(xmlFile,repeats,outfile,~)
 % outfile: if present, the full list of digital codes sent is written to
 %    this filename
 % demoMode: if present, runs in mouse mode with no rewarding or digital codes
+%
+%
+% Modified:
+%
+% 2012/10/22 by Matt Smith - enables support for automatic output
+% file naming. Also fixes the path issues.
+%
+%
 
 %Screen('Preference', 'SkipSyncTests', 1);
 
 % make sure behav and allCodes are empty to start (it will get loaded later
 % if you specify an outfile)
+
+%#ok<*FNDSB> %ignore chidings about logical indexing -ACS
+
 clear global behav;
 clear global allCodes;
 
-global aio;
+global aio eyeHistory;
 global trialSpikes trialCodes thisTrialCodes trialTic allCodes;
 global trialMessage trialData;
 global wins params codes calibration stats;
 global behav;
 
-% check first that you're in a location where there are 'ex' and 'xml'
-% subdirectories
-if (exist('ex','dir') + exist('xml','dir') ~= 14)
-    disp(sprintf('Could not find EX and XML subdirectories. Current directory is: %s',pwd));
-    return;
+% Change to the C:\Ex_local directory to start the program. If this
+% directory doesn't exist, you have problems. Ex should not be run from
+% within the C:\Ex directory
+cd('C:\Ex_local');
+
+% Check that there are 'ex', 'xml' and 'data' subdirectories
+if (exist('ex','dir') ~= 7)
+    error('Could not find EX subdirectory. Current directory is: %s',pwd);
+else
+    addpath('ex');
 end
 
-addpath('ex');
+if (exist('xml','dir') ~= 7)
+    error('Could not find XML subdirectory. Current directory is: %s',pwd);
+else
+    addpath('xml');
+end
+
+if (exist('data','dir') ~= 7)
+    error('Could not find DATA subdirectory. Current directory is: %s',pwd);
+else
+    addpath('data');
+end
+
 tic
 try
-    [exp eParams eRand] = readExperiment(['xml/' xmlFile]);
+    [expt eParams eRand] = readExperiment(['xml/' xmlFile]);
     eParams.xmlFile = xmlFile;
-catch
-    disp(sprintf('Error reading xml file: %s',xmlFile));
+catch 
+    fprintf('Error reading xml file: %s',xmlFile);
     return;
 end
 
+%eParams defaults: -ACS 23Oct2012
+if ~isfield(eParams,'nStimPerFix'),eParams.nStimPerFix=1;end;
+if ~isfield(eParams,'blockRandomize'),eParams.blockRandomize=true;end;
+if ~isfield(eParams,'conditionFrequency'),eParams.conditionFrequency='uniform';end;
+if ~isfield(eParams,'numBlocksPerRandomization'),eParams.numBlocksPerRandomization=1;end;
+if ~isfield(eParams,'exFileControl'),eParams.exFileControl='no';end;
+if ~isfield(eParams,'badTrialHandling'),eParams.badTrialHandling='reshuffle';end; %options are 'noRetry','immediateRetry','reshuffle','endOfBlock'
+
+%retry defaults: -ACS 19Dec2012
+%By default, the condition is retried for every outcome except 'correct',
+%'withhold' (assuming that means a correct withhold), ans 'saccade' (e.g.,
+%for a microstim paradigm). Each field of 'retry' should be the name of a
+%field in the 'codes' global variable that is used as a result code by the
+%ex files. -ACS
+retry = struct('CORRECT',       0,...
+               'IGNORED',       1,...
+               'BROKE_FIX',     1,...
+               'WRONG_TARG',    1,...
+               'BROKE_TARG',    1,...
+               'MISSED',        1,...
+               'FALSEALARM',    1,...
+               'NO_CHOICE',     1,...
+               'WITHHOLD',      0,...
+               'SACCADE',       0);
+allFields = fieldnames(eParams);
+retryFields = cellfun(@cell2mat,regexp(allFields,'(?<=retry_)\w*','match'),'uniformoutput',0);
+isRetryField = ~cellfun(@isempty,retryFields);
+retryFields = retryFields(isRetryField);
+for fx = 1:numel(retryFields)
+    retry.(retryFields{fx}) = eParams.(retryFields{fx});
+end;
+
 % initialize variables for storing spikes, codes and behavior data
-trialSpikes = cell(length(exp),1);
-trialCodes = cell(length(exp),1);
-for i = 1:length(exp)
+trialSpikes = cell(length(expt),1);
+trialCodes = cell(length(expt),1);
+for i = 1:length(expt)
     trialSpikes{i} = cell(0);
     trialCodes{i} = cell(0);
 end
 allCodes = cell(0); % for storing the all the trial codes and results
 behav = struct(); % behav is a struct for user data to be written by the ex-files
 
-ListenChar(2);
-
 wins = struct();
-stats = zeros(3,1);
 
 % Load global variables
 globals;
 
-if nargin > 2
-    params.writeFile = 1;
-    % check if file exists
-    if exist(outfile,'file')
-        load(outfile);
-        % do error-checking here to check this wasn't wrong .mat file
-        warning('*** Output file exists, so it was loaded ***');
+availableOutcomes = fieldnames(retry);
+stats = zeros(numel(availableOutcomes),1);
+
+% now, prompt for monkey ID
+if isfield(params,'SubjectID')
+    disp(['Current Subject ID = ',params.SubjectID]);
+    yorn = 'q'; %initialize
+    while ~ismember(lower(yorn(1)),{'y','n'})
+        yorn = input('Is that correct (y/n)','s');
+        if (strcmp(yorn(1),'n'))
+            disp('Please set the correct value for params.SubjectID in globals.m');
+            return;
+        elseif (strcmp(yorn(1),'y'))
+            disp('Continuing with runex ...')
+        else
+            beep
+            fprintf('Reply ''y'' or ''n''\n');
+        end
+    end;
+else
+    disp('Please set a value for params.SubjectID in globals.m');
+end
+
+% define default outfile name
+[~,xmlname,~] = fileparts(xmlFile);
+defaultoutfile=[params.SubjectID,'_',datestr(now, 'yyyy.mmm.DD.HH.MM.SS'),'_',xmlname,'.mat'];
+
+if nargin > 2 % outfile is specified at the command line
+    if ~ischar(outfile)
+        if outfile == 0
+            params.writeFile = 0;
+            outfile = defaultoutfile;
+        elseif outfile == 1
+            params.writeFile = 1;
+            outfile = defaultoutfile;
+        else
+            error('Must specify 0 or 1 for outfile flag.');
+        end
+    else % user specified an outfile name at the command
+        params.writeFile = 1;
+        % check if file exists
+        if exist(outfile,'file')
+            load(outfile);
+            % do error-checking here to check this wasn't wrong .mat file
+            warning('*** Output file exists, so it was loaded and will be appended. ***');
+        end
     end
+else %nothing specified for the outfile
+    outfile = defaultoutfile;
 end
 
 if nargin > 3
     params.getEyes = 0;
     params.sendingCodes = 0;
     params.rewarding = 0;
+    params.getSpikes = 0;
+    params.writeFile = 0;
 end
 
+ListenChar(2);
 delete(timerfindall)
 
 %daqreset;
 FlushEvents;
 
 % load stored calibration file
-load calibration;
+if params.getEyes==0
+    load mouseModeCalibration;
+else
+    load calibration;
+end;
 % This makes sure that the calibration values are stored with the
 % data (via the sendStruct call)
 params.calibPixX = calibration{1}(:,1)';
@@ -89,6 +193,7 @@ params.calibVoltX = calibration{2}(:,1)';
 params.calibVoltY = calibration{2}(:,2)';
 
 ordering = [];
+eyeHistory = [];
 currentBlock = 1;
 AssertOpenGL;
 
@@ -115,6 +220,7 @@ if params.getEyes
     else
         trialData{1} = xmlFile;
     end
+    load calibration
     samp;
 else
     if params.writeFile
@@ -123,11 +229,15 @@ else
     else
         trialData{1} = [xmlFile ' (MOUSE MODE)'];
     end
+    load mouseModeCalibration
 end
 trialData{2} = '';
 trialData{3} = '';
 trialData{4} = '(s)timulus, (c)alibrate, e(x)it';
-trialData{5} = '';
+lastLine = 15;
+for lx = numel(trialData)+1:lastLine
+    trialData{lx} = '';
+end;
       
 % Open a double buffered fullscreen window and draw a gray background 
 % to front and back buffers:
@@ -336,7 +446,11 @@ while 1
         % toggle between mouse mode and monkey mode - not fully working
         if params.getEyes
             params.getEyes = 0;
-            samp(-4);
+            try
+                samp(-4);
+            catch
+                fprintf('Hangs at line 426'); %for debugging
+            end;
             aio.TimerFcn = {@plotMouse};
             if params.writeFile
                 [~,outfilename,outfileext] = fileparts(outfile);
@@ -345,6 +459,10 @@ while 1
                 trialData{1} = [xmlFile ' (MOUSE MODE)'];
             end
             drawTrialData();
+            load mouseModeCalibration
+            setWindowBackground(wins.voltageBG);
+            drawCalibration(size(calibration{2},1));
+            Screen('CopyWindow',wins.voltageBG,wins.voltage,wins.voltageDim,wins.voltageDim);
         else
             params.getEyes = 1;
             samp;
@@ -356,6 +474,10 @@ while 1
                 trialData{1} = xmlFile;
             end
             drawTrialData();
+            load calibration
+            setWindowBackground(wins.voltageBG);
+            drawCalibration(size(calibration{2},1));
+            Screen('CopyWindow',wins.voltageBG,wins.voltage,wins.voltageDim,wins.voltageDim);
         end
     elseif c == 'l'
         Screen('CopyWindow',wins.voltageBG,wins.voltage,wins.voltageDim,wins.voltageDim);
@@ -404,18 +526,24 @@ while 1
 
         if currentBlock > eParams.rpts
             currentBlock = 1;
-            ordering = 1:length(exp);
         end
         
         for j = currentBlock:eParams.rpts
-            if isempty(ordering)                         
-                ordering = 1:length(exp);
-            end
+            
+            ordering = createOrdering(expt,...
+                'blockRandomize',eParams.blockRandomize,...
+                'conditionFrequency',eParams.conditionFrequency,...
+                'numBlocksPerRandomization',eParams.numBlocksPerRandomization,...
+                'exFileControl',eParams.exFileControl); %-ACS 23Oct2012
+            if any(ordering<0), ordering = []; break; end; %#ok<NASGU> %break loop for any ordering less than zero (e.g., from EX file control) -ACS 23Oct2012
+            trialCounter = 1;
             
             while ~isempty(ordering)
-                currentTrial = ceil(length(ordering)*rand(1));
-                cnd = ordering(currentTrial);
-                drawHistogram(cnd);
+                if any(ordering<0), ordering = []; break; end; %#ok<NASGU>
+                eyeHistory = eyeHistory(end,:); %reset eye history -ACS 25Oct2012
+                cnd = ordering(1:min(eParams.nStimPerFix,numel(ordering)));
+                
+                %drawHistogram(cnd);
                 % only set the trialTic for trials that aren't immediately
                 % following the 's' command
                 if resetTicFlag
@@ -426,7 +554,7 @@ while 1
                 end
                 
                 trialData{2} = sprintf('Block %i/%i',j,eParams.rpts);
-                trialData{3} = sprintf('Trial %i/%i, condition %i',length(exp)-length(ordering)+1,length(exp),cnd);
+                trialData{3} = [sprintf('Trial %i/%i, condition(s) ',trialCounter,length(expt)) sprintf('%i ',cnd)];
                 trialData{4} = 'Running stimulus...(q)uit';
                 drawTrialData();
                 
@@ -436,37 +564,66 @@ while 1
                 % that code 1 is sent, thus allowing us to recreate global
                 % time.
                 allCodes{end}.startTime = datestr(now,'HH.MM.SS.FFF');
-
-                sendCode(codes.START_TRIAL);   
-                sendCode(cnd+32768); % send condition # in 32769-65535 range
                                 
-                e = exp{cnd};
+                % e needs to be a cell array or struct array  *****
+                e = expt(cnd);
                 fn = fieldnames(eRand);
-                for i = 1:length(fn)                    
-                    fieldName = fn{i};                    
-                    val = eRand.(fieldName);
-                    val = val(randi(length(val)));
-                    e.(fieldName) = val;
-                end
+                for e_indx = 1:length(e)
+                    for i = 1:length(fn)                    
+                        fieldName = fn{i};                    
+                        val = eRand.(fieldName);
+                        val = val(randi(length(val)));
+                        e{e_indx}.(fieldName) = val;
+                    end;
+                end;
+                e = cell2mat(e);
+                
+                sendCode(codes.START_TRIAL);   
+
                 % send the trial parameters here, before adding
-                % eParams to e (because eParams were sent already)
-                sendStruct(e);
-    
+                % eParams to e (because eParams were sent already) 
+                % loop over nstim
+                for I =1:numel(cnd);
+                    sendCode(cnd(I)+32768); % send condition # in 32769-65535 range
+                    sendStruct(e(I));
+                end;
+                
                 % use a try/catch here in case there are duplicate names in
                 % e and eParams
-                try
-                    e = catstruct(e,eParams);
-                catch ME
-                    disp('Error combining e and eParams: duplicate field name');
-                    Screen('CloseAll');
-                    throw(ME);
-                end
-                
+                e = num2cell(e);
+                for I = 1:numel(e)
+                    try
+                        e{I} = catstruct(e{I},eParams);
+                    catch ME
+                        disp('Error combining e and eParams: duplicate field name');
+                        Screen('CloseAll');
+                        throw(ME);
+                    end
+                end;
+                e = cell2mat(e);
                 try
                     histStart();
-                    trialResult = eval([e.exFileName '(e)']);
-                    stats(trialResult) = stats(trialResult) + 1;
-                    trialData{5} = sprintf('%i good, %i bad, %i abort',stats);
+                    previousTrialCount = trialCounter;
+                    trialResult = eval([e(1).exFileName '(e)']);
+                    
+                    trialResult(trialResult==1) = codes.CORRECT; %for backwards compatibility -ACS 23Oct2012
+                    trialResult(trialResult==2) = codes.BROKE_FIX; %for backwards compatibility
+                    trialResult(trialResult==3) = codes.IGNORED; %for backwards compatibility
+                    trialResultStrings = exDecode(trialResult(:));
+                    for ox = 1:numel(availableOutcomes) %new scoring -ACS 23Oct2012
+                        if retry.(availableOutcomes{ox}),
+                            stats(ox) = stats(ox)+any(ismember(trialResultStrings,availableOutcomes{ox})); %only count these once per fix
+                        else
+                            stats(ox) = stats(ox)+sum(ismember(trialResultStrings,availableOutcomes{ox})); %sum these per fix
+                        end;
+                        nOutcomesPerLine = 5;
+                        currentLine = 5+floor((ox-1)/nOutcomesPerLine);
+                        if mod(ox,nOutcomesPerLine)==1
+                            trialData{currentLine}=sprintf('%i %s',stats(ox),availableOutcomes{ox});
+                        else 
+                            trialData{currentLine} = [trialData{currentLine} sprintf(', %i %s',stats(ox),availableOutcomes{ox})];
+                        end;
+                    end;                     
                 catch err
                     trialData{5} = 'Error in ex file, quit to diagnose.';
                     trialResult = 0;
@@ -482,17 +639,38 @@ while 1
                 msg('all_off');
                 msgAndWait('rem_all');
                 
-                if trialResult == 1
-                    sendCode(codes.REWARD);
-                    giveJuice();
-                    ordering(currentTrial) = [];
-                    sendCode(codes.END_TRIAL);
-                    trialCodes{cnd}{end+1} = thisTrialCodes;
-                    histCompile(cnd);
-                else
-                    sendCode(codes.END_TRIAL);
-                end
-                
+                if trialMessage>-1
+                    checked = false(size(cnd));
+                    for ox = 1:numel(trialResultStrings)
+                        checked(ox) = ~retry.(trialResultStrings{ox});
+                    end;
+                    if any(checked)
+                        trialCounter = trialCounter+sum(checked);
+                        for cx = 1:numel(cnd)      %Not sure this is functioning in the intended way yet... -ACS
+                            trialCodes{cnd(cx)}{end+1} = thisTrialCodes;
+                        end;
+                    end;
+                    switch eParams.badTrialHandling %added 23Oct2012 -ACS
+                        case 'noRetry' %don't retry bad trials
+                            ordering(1:numel(cnd)) = []; %just erase the current cnd from ordering and don't look back...
+                        case 'immediateRetry'
+                            ordering(find(checked)) = []; %tick off the good trials and feed back the ordering as is. This option really only makes sense if nStimPerFix==1.
+                        case 'reshuffle'
+                            ordering(find(checked)) = []; %tick off the good trials
+                            ordering = ordering(randperm(numel(ordering))); %reshuffle the remaining conditions
+                        case 'endOfBlock'
+                            needsRetried = ordering(find(~checked)); %trials that haven't been checked off
+                            ordering = [ordering(numel(cnd)+1:end) needsRetried]; %take the conditions that haven't been attempted yet, and add the conditions needing another try to the end
+                        otherwise
+                            trialData{5} = 'Unrecognized option for badTrialHandling, quit to diagnose.';
+                            trialResult = 0;
+                            trialMessage = -1;
+                            drawTrialData();
+                            beep;
+                    end;
+                end;
+                sendCode(codes.END_TRIAL);
+                               
                 % Global history of trial codes
                 %
                 % NOTE: These codes are all referenced relative to the time
@@ -506,22 +684,20 @@ while 1
                 
                 % Write allCodes to a file to keep track of data on Ex side
                 % Can use the behav struct to keep track of behavior if you
-                % like
+                % like. Contents of behav are user-defined in ex-functions
                 if params.writeFile
-                    save(outfile,'allCodes','behav');
+                    save(['data/',outfile],'allCodes','behav');
                 end
                 
                 if trialMessage == -1
                     break;
                 end
-                
             end
 
             if trialMessage == -1
                 currentBlock = j;
                 break;
             end       
-            
             currentBlock = currentBlock + 1;
         end
         matlabUDP('send', 'q');        

@@ -1,0 +1,23 @@
+<stimulus name="amptuning" repeats="40" ex="ex_SaccadeTask" bgColor="0 0 0">
+    <conditions type="circle">
+        <distance>[50 137 243 354 475 608]</distance>
+        <angle>124</angle>
+        <size>15</size>
+    </conditions>
+    <params>
+        <fixX>0</fixX>
+        <fixY>0</fixY>
+        <fixRad>5</fixRad>
+        <fixColor>[0 0 255]</fixColor>
+        <targetColor>[255 255 255]</targetColor>
+        <helperTargetColor>[10 10 10]</helperTargetColor>
+        <timeToFix>1000</timeToFix>
+        <fixDuration>500</fixDuration>
+        <targetDuration>50</targetDuration>
+        <noFixTimeout>1000</noFixTimeout>
+        <targetOnsetDelay>200</targetOnsetDelay>
+        <saccadeInitiate>500</saccadeInitiate>
+        <saccadeTime>400</saccadeTime>
+        <stayOnTarget>200</stayOnTarget>
+    </params>  
+</stimulus>

@@ -19,10 +19,9 @@ global calibration wins;
    
     Screen('CopyWindow',wins.voltageBG,wins.voltage,wins.voltageDim,wins.voltageDim);
     Screen('CopyWindow',wins.eyeBG,wins.eye,wins.eyeDim,wins.eyeDim);
-
     if nargin > 0
         fixY = -fixY; %flip y coordinate because PTB's native coordinate space has negative up, but Ex uses negative down. -ACS13Mar2012
-        numWindows = unique([length(fixX) length(fixY) length(r)]); 
+        numWindows = unique([length(fixX) length(fixY) size(r,2)]); 
         assert(numel(numWindows)==1,'Fixation window parameters X, Y and R must be same size');
         if nargin > 3
             winColors = varargin{1};
@@ -35,12 +34,24 @@ global calibration wins;
             winColors = repmat([255 255 0],numWindows,1);
         end;                
         for i = 1:numWindows
-            fixationWindow = r(i).*[-1 -1; -1 1; 1 1; 1 -1] + repmat([fixX(i) fixY(i)],4,1); 
-
-            Screen('FramePoly',wins.eye,winColors(i,:),fixationWindow.*repmat(wins.pixelsPerPixel,4,1)+repmat(wins.midE,4,1));
-            vPoints(:,1) = [fixationWindow ones(size(fixationWindow,1),1)] * calibration{5};
-            vPoints(:,2) = [bsxfun(@times,fixationWindow,[1 -1]) ones(size(fixationWindow,1),1)] * calibration{6};
-            Screen('FramePoly',wins.voltage,winColors(i,:),vPoints);
+            if size(r,1)==1 %indicates a circle is desired
+%                 fixationWindow = r(i).*[-1 -1; -1 1; 1 1; 1 -1] + repmat([fixX(i) fixY(i)],4,1); 
+                fixationWindow = r(i).*[-1 -1 1 1]' + [fixX(i) fixY(i) fixX(i) fixY(i)]'; 
+                Screen('FrameOval',wins.eye,winColors(i,:),fixationWindow.*repmat(wins.pixelsPerPixel,1,2)'+repmat(wins.midE,1,2)');
+                fixationWindow = reshape(fixationWindow,2,[])'; %put X values in one column and Y values in another...
+                vPoints(:,1) = [fixationWindow ones(size(fixationWindow,1),1)] * calibration{5};
+                vPoints(:,2) = [bsxfun(@times,fixationWindow,[1 -1]) ones(size(fixationWindow,1),1)] * calibration{6};
+                vPoints = reshape(vPoints',[],1); %put back to column form
+                Screen('FrameOval',wins.voltage,winColors(i,:),vPoints); clear vPoints
+            elseif size(r,1)==2
+                fixationWindow = bsxfun(@times,r(:,i)',[-1 -1; -1 1; 1 1; 1 -1]) + repmat([fixX(i) fixY(i)],4,1); 
+                Screen('FramePoly',wins.eye,winColors(i,:),fixationWindow.*repmat(wins.pixelsPerPixel,4,1)+repmat(wins.midE,4,1));
+                vPoints(:,1) = [fixationWindow ones(size(fixationWindow,1),1)] * calibration{5};
+                vPoints(:,2) = [bsxfun(@times,fixationWindow,[1 -1]) ones(size(fixationWindow,1),1)] * calibration{6};
+                Screen('FramePoly',wins.voltage,winColors(i,:),vPoints);
+            else
+                error('''r'' is expected to be either 1xNwindows (circles) or 2xNwindows (rectangles)');
+            end;
         end;
     end
 end

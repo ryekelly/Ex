@@ -30,12 +30,14 @@ function result = ex_memoryGuidedSaccadePlusDots(e)
 % yradius: the y height of the dot field
 % colorFEF: 3 element vector for the FEF dots colors [R G B]
 %
-% Last modified:
-% 2012/01/17 by Matt Smith
-%
+% Modified:
+% 2012/10/22 by Matt Smith - add in e=e(1);
+% 2012/11/16 by Matt Smith - update to add helperTargetColor
 %
 
     global params codes behav;
+     
+    e = e(1); %in case more than one 'trial' is passed at a time...
     
     objID = 3;
     
@@ -53,7 +55,10 @@ function result = ex_memoryGuidedSaccadePlusDots(e)
     msg('set 1 oval 0 %i %i %i %i %i %i',[e.fixX e.fixY e.fixRad e.fixColor(1) e.fixColor(2) e.fixColor(3)]);
     msg('set 2 oval 0 %i %i %i %i %i %i',[newX newY e.size e.targetColor(1) e.targetColor(2) e.targetColor(3)]);
     msg('set 3 fef_dots %i %i %i %i %i %i %i %i %i %i %i %i',[numFrames e.seed e.ndots e.dotsize e.dwell e.centerx e.centery e.xradius e.yradius e.colorFEF]);
-    msg(['diode ' num2str(objID)]);    
+    if isfield(e,'helperTargetColor')
+        msg('set 4 oval 0 %i %i %i %i %i %i',[newX newY e.size e.helperTargetColor(1) e.helperTargetColor(2) e.helperTargetColor(3)]);
+    end
+    msg(['diode ' num2str(objID)]); 
     
     %drawFixationWindows(fixX,fixY,params.fixWinRad);
 
@@ -69,9 +74,10 @@ function result = ex_memoryGuidedSaccadePlusDots(e)
         msgAndWait('all_off');
         sendCode(codes.FIX_OFF);
         waitForMS(e.noFixTimeout);
-        result = 3;
+        result = codes.IGNORED;
         return;
     end
+    sendCode(codes.FIXATE);
 
     if ~waitForMS(e.targetOnsetDelay,e.fixX,e.fixY,params.fixWinRad)
         % hold fixation before stimulus comes on
@@ -79,7 +85,7 @@ function result = ex_memoryGuidedSaccadePlusDots(e)
         msgAndWait('all_off');
         sendCode(codes.FIX_OFF);
         waitForMS(e.noFixTimeout);
-        result = 3;
+        result = codes.BROKE_FIX;
         return;
     end
     
@@ -97,7 +103,7 @@ function result = ex_memoryGuidedSaccadePlusDots(e)
             sendCode(codes.TARG_OFF);
             sendCode(codes.FIX_OFF);
             waitForMS(e.noFixTimeout);
-            result = 2;
+            result = codes.BROKE_FIX;
             return;
         end
     else
@@ -116,7 +122,7 @@ function result = ex_memoryGuidedSaccadePlusDots(e)
             msgAndWait('all_off');
             sendCode(codes.FIX_OFF);
             waitForMS(e.noFixTimeout);
-            result = 2;
+            result = codes.BROKE_FIX;
             return;
         end
         
@@ -129,7 +135,9 @@ function result = ex_memoryGuidedSaccadePlusDots(e)
         sendCode(codes.FIX_OFF);
         
         sendCode(codes.CORRECT);
-        result = 1;
+        sendCode(codes.REWARD);
+        giveJuice();
+        result = codes.CORRECT;
         
         histStop();
         return;
@@ -145,7 +153,7 @@ function result = ex_memoryGuidedSaccadePlusDots(e)
         msgAndWait('all_off');
         sendCode(codes.FIX_OFF);
         waitForMS(e.noFixTimeout);
-        result = 2;
+        result = codes.BROKE_FIX;
         return;
     end
     
@@ -159,7 +167,7 @@ function result = ex_memoryGuidedSaccadePlusDots(e)
         msgAndWait('all_off');
         sendCode(codes.FIX_OFF);
         waitForMS(e.noFixTimeout);
-        result = 2;
+        result = codes.BROKE_FIX;
         return;
     end
     
@@ -170,7 +178,6 @@ function result = ex_memoryGuidedSaccadePlusDots(e)
     msgAndWait('queue_end');
     sendCode(codes.STIM_OFF);
     sendCode(codes.FIX_OFF);
-    
     %drawFixationWindows(newX,newY,params.targWinRad);
 
     % detect saccade here - we're just going to count the time leaving the
@@ -181,18 +188,24 @@ function result = ex_memoryGuidedSaccadePlusDots(e)
         sendCode(codes.NO_CHOICE);
         msgAndWait('all_off');
         sendCode(codes.FIX_OFF);
-        result = 2;
+        result = codes.NO_CHOICE;
         return;
     end
 
     sendCode(codes.SACCADE);
+
+    if isfield(e,'helperTargetColor')
+        %% turn on a target for guidance if 'helperTargetColor' param is present
+        msg('obj_on 4');
+        sendCode(codes.TARG_ON);
+    end
     
     if ~waitForFixation(e.saccadeTime,newX,newY,params.targWinRad)
         % didn't reach target
         sendCode(codes.NO_CHOICE);
         msgAndWait('all_off');
         sendCode(codes.FIX_OFF);
-        result = 2;
+        result = codes.NO_CHOICE;
         return;
     end
     
@@ -201,13 +214,15 @@ function result = ex_memoryGuidedSaccadePlusDots(e)
         sendCode(codes.BROKE_TARG);
         msgAndWait('all_off');
         sendCode(codes.FIX_OFF);
-        result = 2;
+        result = BROKE_TARG;
         return;
     end
 
     sendCode(codes.FIXATE);
     sendCode(codes.CORRECT);
-    result = 1;
+    sendCode(codes.REWARD);
+    giveJuice();
+    result = codes.CORRECT;
     
     histStop();    
    

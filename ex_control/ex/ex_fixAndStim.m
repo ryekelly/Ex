@@ -21,12 +21,16 @@ function result = ex_fixAndStim(e)
 % saccadeDir: angle of target to fixation, usually set with a random
 %
 % Last modified:
-% 2012/03/21 by Matt Smith
-%
+% 2012/10/22 by Matt Smith - added e=e(1);
+% 2012/11/15 by Matt Smith - modified from old fixAndStim to now turn off
+% fix pt before stim, reward at stim, and also used XML parameter to have
+% random time to stim. This is the new default fixAndStim
 %
 
     global params codes behav allCodes;
     
+    e = e(1); %in case more than one 'trial' is passed at a time...
+
     % check if the field exists, if not set it to zero
     if ~isfield(behav,'microStimNextTrial')
         behav.microStimNextTrial = 0;
@@ -48,103 +52,74 @@ function result = ex_fixAndStim(e)
         sendCode(codes.IGNORED);
         msgAndWait('all_off');
         sendCode(codes.FIX_OFF);
-        result = 3;        
+        result = codes.IGNORED;        
         return;
     end
-    
+    sendCode(codes.FIXATE);
+
     if ~waitForMS(e.preStimFix,e.fixX,e.fixY,params.fixWinRad)
         % hold fixation before stimulus comes on
         sendCode(codes.BROKE_FIX);
         msgAndWait('all_off');
         sendCode(codes.FIX_OFF);
         waitForMS(e.noFixTimeout);
-        result = 3;
+        result = codes.BROKE_FIX;
         return;
     end
-    
+
+    msgAndWait('obj_off 1'); % turn off fixation point before microstim
+    sendCode(codes.FIX_OFF);
+    if ~waitForMS(e.waitForStim,e.fixX,e.fixY,params.fixWinRad)
+        % hold fixation briefly before microstim starts
+        sendCode(codes.BROKE_FIX);
+        msgAndWait('all_off');
+        waitForMS(e.noFixTimeout);
+        result = codes.BROKE_FIX;
+        return;
+    end
+
     histAlign();
 
     % On even trials, microstim
     ustimflag = 0;
+    deepPink = [255 20 147];
+    fixColor = [255 255 0];
     if (e.microStimDur > 0)
         if (behav.microStimNextTrial == 1)
             ustimflag = 1;
+            fixColor = deepPink;
             behav.microStimNextTrial = 0;
             sendCode(codes.USTIM_ON);
             microStim(e.microStimDur);
             sendCode(codes.USTIM_OFF);
-            % generate a tone with every microstim
-            fs=44100;
-            t=0:1/fs:.12;
-            y=sin(440*2*pi*t);
-            y=y.*hann(length(y))';
-            sound(y,fs);
+            if (e.toneWithStim)
+                % generate a tone if desired
+                fs=44100;
+                t=0:1/fs:.12;
+                y=sin(440*2*pi*t);
+                y=y.*hann(length(y))';
+                sound(y,fs);
+            end
 %        else
 %            behav.microStimNextTrial = 0;
         end
     end
+
+    % reward him after microstim whether he maintains fixation or not
+    sendCode(codes.REWARD);
+    sendCode(codes.CORRECT);
+    result = codes.CORRECT;
+    giveJuice();
     
-    if ~waitForMS(e.fixDuration,e.fixX,e.fixY,params.fixWinRad)
-        % failed to keep fixation
-        sendCode(codes.BROKE_FIX);
-        msgAndWait('all_off');
-        sendCode(codes.FIX_OFF);
-        %waitForMS(e.noFixTimeout);
-        result = 3;
-        return;
-    end        
-
-    % choose a target location randomly around a circle
-    theta = deg2rad(-1 * e.saccadeDir);
-    newX = round(e.saccadeLength * cos(theta));
-    newY = round(e.saccadeLength * sin(theta));
-
-    % turn off stimulus and turn on target
-    msgAndWait('set 1 oval 0 %i %i %i %i %i %i',[newX newY e.fixRad e.fixColor(1) e.fixColor(2) e.fixColor(3)]);
-    sendCode(codes.FIX_MOVE);
+    if ustimflag
+        % look for saccade after microstim only
+        if ~waitForMS(e.sacCheckTime,e.fixX,e.fixY,params.fixWinRad,fixColor)
+            result = codes.SACCADE;
+            sendCode(codes.SACCADE);
+        end
+    end
     
     histStop();
-
-    % detect saccade here - we're just going to count the time leaving the
-    % fixation window as the saccade but it would be better to actually
-    % analyze the eye movements.
-    %
-    % One weird thing here is it doesn't move the target window (on the
-    % controls screen) until you leave the fixation window. Doesn't matter
-    % to monkey, but a little harder for the human controlling the
-    % computer. Maybe we can fix this when we implement a saccade-detection
-    % function.
-    %
-    if (e.saccadeInitiate > 0) % in case you don't want to have a saccade
-        if waitForMS(e.saccadeInitiate,e.fixX,e.fixY,params.fixWinRad)
-            % didn't leave fixation window
-            sendCode(codes.NO_CHOICE);
-            msgAndWait('all_off');
-            sendCode(codes.FIX_OFF);
-            result = 2;
-            return;
-        end
-        
-        sendCode(codes.SACCADE);
-    end
-    
-    if ~waitForFixation(e.saccadeTime,newX,newY,params.targWinRad)
-        % didn't reach target
-        sendCode(codes.NO_CHOICE);
-        msgAndWait('all_off');
-        sendCode(codes.FIX_OFF);
-        result = 2;
-        return;
-    end
-    
-    if ~waitForMS(e.stayOnTarget,newX,newY,params.targWinRad)
-        % didn't stay on target long enough
-        sendCode(codes.BROKE_TARG)
-        msgAndWait('all_off');
-        sendCode(codes.FIX_OFF);
-        result = 2;
-        return;
-    end
 
     % only set this flag back to 1 if you complete a correct unstimulated
     % trial
@@ -152,7 +127,6 @@ function result = ex_fixAndStim(e)
         behav.microStimNextTrial = 1;
     end
     
-    sendCode(codes.FIXATE);
-    sendCode(codes.CORRECT);
-    sendCode(codes.FIX_OFF);
-    result = 1;
+    % a little extra time to make sure trials aren't too close together
+    pause(e.postTrialWait/1000);
+    

@@ -1,21 +1,27 @@
 %%% GLOBAL PARAMETERS FILE
 
+% Subject ID for file-saving purposes
+params.SubjectID = 'WileE';
+% params.SubjectID = 'BooBoo';
+
 %%%% Settings for debugging/demo
-params.getEyes = 0; % 1 for using monkey eye movements, 0 for mouse
+params.getEyes = 1; % 1 for using monkey eye movements, 0 for mouse
 params.sendingCodes = 1; % 1 for sending digital codes, 0 for none
 params.rewarding = 1; % 1 for providing rewards, 0 for none
-params.getSpikes = 1; % 1 to bring in spikes from analog input, 0 to not
-params.writeFile = 0; % 1 to write trial data to file, 0 to not
+params.getSpikes = 0; % 1 to bring in spikes from analog input, 0 to not
+params.writeFile = 1; % 1 to write trial data to file, 0 to not
 %
 params.controlIP = '192.168.1.11'; % IP address of control computer
 params.displayIP = '192.168.1.10'; % IP address of display computer
 params.screenDistance = 36; % distance from eye to screen in cm
 params.pixPerCM = 27.03; % pixels per centimeter of screen
 % fixation window (pixels)
-params.fixWinRad = 50;
+params.fixWinRad = 20; %20  -use a column vector (e.g., [20;20]) for a rectangular (or square) window -first element is half-width and second element is half-height)
 % target window (pixels)
-params.targWinRad = 90;
+params.targWinRad = 40; %35
 %calibration params
+
+%%
 params.extent = 250; % spacing of calibration dots in pixels
 params.calibX = [-1 0 1] * params.extent;
 params.calibY = [1 0 -1] * params.extent;
@@ -29,7 +35,11 @@ params.spikeThreshold = 1;
 params.histTickSpacing = 250;
 % used by plotEyes to smooth eye movements - currently just a mean of last
 % 'n' data points
-params.eyeSmoothing = 20; % must be >=1
+params.eyeSmoothing = 10; % must be >=1
+params.drawSaccades = true;
+% Number of Stimuli per fixation (ex_blah.m must be updated to support
+% this). Look at ex_activefixation.m for an example
+% params.nStimPerFix = 5; %Moved this to XML control. Added default to runex. -ACS 24Oct2012
 
 %screen parameters
 wins.voltageSize = [0 0 500 500];
@@ -120,7 +130,20 @@ codes.WRONG_TARG = 153 ; % Chose wrong target
 codes.BROKE_TARG = 154 ; % Left target fixation before required time
 codes.MISSED = 155 ;	% for a detection task
 codes.FALSEALARM = 156 ;
-codes.NO_CHOICE = 157 ; % saccade to non-target / failure to leave fix window
+codes.NO_CHOICE = 157 ;	% saccade to non-target / failure to leave fix window
+codes.WITHHOLD = 158 ; %correctly-withheld response
+
+%%
+% retry.CORRECT = 0 ;	% Independent of whether reward is given
+% retry.IGNORED = 1 ;	% Never fixated or started trial
+% retry.BROKE_FIX = 1 ; % Left fixation before trial complete
+% retry.WRONG_TARG = 0 ; % Chose wrong target
+% retry.BROKE_TARG = 1 ; % Left target fixation before required time
+% retry.MISSED = 0 ;	% for a detection task
+% retry.FALSEALARM = 0 ;
+% retry.NO_CHOICE = 0 ;	% saccade to non-target / failure to leave fix window
+% retry.WITHHOLD = 0 ; %correctly-withheld response
+% retry.SACCADE = 0;
 % touch bar / lever / button press codes would go here
 
 % OLD CODES

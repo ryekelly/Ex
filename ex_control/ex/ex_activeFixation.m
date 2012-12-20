@@ -21,34 +21,15 @@ function result = ex_activeFixation(e)
 % saccadeDir: angle of target to fixation, usually set with a random
 %
 % Last modified:
-% 2011/12/20 by Matt Smith
+% 2012/10/22 by Adam Snyder - support multiple stimuli per fixation
 %
 %
 
-    global params codes behav;
-    
-    % this automatically generates the stimulus command, as long as there
-    % is a runline variable in the e struct.
-    runLine = e.runline;
-    runString = '';
-    while ~isempty(runLine)
-        [tok runLine] = strtok(runLine);
-        
-        while ~isempty(tok)
-            [thisTok tok] = strtok(tok,',');
-            
-            runString = [runString num2str(eval(['e.' thisTok]))];
-        end
-        
-        runString = [runString ' '];
-    end
-    runString = [e.type ' ' runString(1:end-1)];
-
+    global params codes behav;   
+  
     objID = 2;
-    
     % obj 1 is fix spot, obj 2 is stimulus, diode attached to obj 2
-    msg('set 1 oval 0 %i %i %i %i %i %i',[e.fixX e.fixY e.fixRad e.fixColor(1) e.fixColor(2) e.fixColor(3)]);
-    msg(['set ' num2str(objID) ' ' runString]);
+    msg('set 1 oval 0 %i %i %i %i %i %i',[e(1).fixX e(1).fixY e(1).fixRad e(1).fixColor(1) e(1).fixColor(2) e(1).fixColor(3)]);
     msg(['diode ' num2str(objID)]);    
     
     msgAndWait('ack');
@@ -58,7 +39,7 @@ function result = ex_activeFixation(e)
     msgAndWait('obj_on 1');
     sendCode(codes.FIX_ON);
 
-    if ~waitForFixation(e.timeToFix,e.fixX,e.fixY,params.fixWinRad)
+    if ~waitForFixation(e(1).timeToFix,e(1).fixX,e(1).fixY,params.fixWinRad)
         % failed to achieve fixation
         sendCode(codes.IGNORED);
         msgAndWait('all_off');
@@ -67,44 +48,84 @@ function result = ex_activeFixation(e)
         return;
     end
     
-    if ~waitForMS(e.preStimFix,e.fixX,e.fixY,params.fixWinRad)
+    sendCode(codes.FIXATE);
+    start = tic;
+    
+    if ~waitForMS(e(1).preStimFix,e(1).fixX,e(1).fixY,params.fixWinRad)
         % hold fixation before stimulus comes on
         sendCode(codes.BROKE_FIX);
         msgAndWait('all_off');
         sendCode(codes.FIX_OFF);
-        waitForMS(e.noFixTimeout);
+        waitForMS(e(1).noFixTimeout);
         result = 3;
         return;
     end
     
-    msgAndWait('obj_on 2');
-    sendCode(codes.STIM_ON);
-    
-    histAlign();
-    
-    if ~waitForSlave(e.fixX,e.fixY,params.fixWinRad)
-        % failed to keep fixation
-        sendCode(codes.BROKE_FIX);
-        msgAndWait('all_off');
+    result = ones(1,numel(e));
+    %'e' loop starts here:
+    for e_indx = 1:numel(e)
+        % this automatically generates the stimulus command, as long as there
+        % is a runline variable in the e struct.
+        runLine = e(e_indx).runline;
+        runString = '';
+        while ~isempty(runLine)
+            [tok runLine] = strtok(runLine);
+
+            while ~isempty(tok)
+                [thisTok tok] = strtok(tok,',');
+
+                runString = [runString num2str(eval(['e(e_indx).' thisTok]))];
+            end
+
+            runString = [runString ' '];
+        end
+        runString = [e(e_indx).type ' ' runString(1:end-1)];
+        msg(['set ' num2str(objID) ' ' runString]);
+        if e_indx>1
+            if isfield(e(e_indx),'interStimInterval'), holdTime = e(e_indx).interStimInterval; else, holdTime = e(e_indx).preStimFix; end;
+            if ~waitForMS(holdTime,e(e_indx).fixX,e(e_indx).fixY,params.fixWinRad)
+                % hold fixation before stimulus comes on
+                sendCode(codes.BROKE_FIX);
+                msgAndWait('all_off');
+                sendCode(codes.FIX_OFF);
+                waitForMS(e(e_indx).noFixTimeout);
+                result(e_indx:end) = 3;
+                return;
+            end;
+        end;
+
+        msgAndWait('obj_on 2');
+        sendCode(codes.STIM_ON);
+
+        histAlign();
+
+        if ~waitForSlave(e(e_indx).fixX,e(e_indx).fixY,params.fixWinRad)
+            % failed to keep fixation
+            sendCode(codes.BROKE_FIX);
+            msgAndWait('all_off');
+            sendCode(codes.STIM_OFF);
+            sendCode(codes.FIX_OFF);
+            waitForMS(e(e_indx).noFixTimeout);
+            result(e_indx:end) = 3;
+            return;
+        end        
+
+%         turn off stimulus and turn on target
+        msgAndWait('queue_begin');
+        msg('obj_off 2');
+        if e_indx==numel(e)
+            % choose a target location randomly around a circle
+            theta = deg2rad(e(e_indx).saccadeDir);
+            newX = round(e(e_indx).saccadeLength * cos(theta));
+            newY = round(e(e_indx).saccadeLength * sin(theta));
+            msg('set 1 oval 0 %i %i %i %i %i %i',[newX newY e(1).fixRad e(1).fixColor(1) e(1).fixColor(2) e(1).fixColor(3)]);
+        end;
+        msgAndWait('queue_end');
         sendCode(codes.STIM_OFF);
-        sendCode(codes.FIX_OFF);
-        waitForMS(e.noFixTimeout);
-        result = 3;
-        return;
-    end        
-
-    % choose a target location randomly around a circle
-    theta = deg2rad(e.saccadeDir);
-    newX = round(e.saccadeLength * cos(theta));
-    newY = round(e.saccadeLength * sin(theta));
-
-    % turn off stimulus and turn on target
-    msgAndWait('queue_begin');
-    msg('obj_off 2');
-    msg('set 1 oval 0 %i %i %i %i %i %i',[newX newY e.fixRad e.fixColor(1) e.fixColor(2) e.fixColor(3)]);
-    msgAndWait('queue_end');
-    sendCode(codes.STIM_OFF);
-    sendCode(codes.FIX_MOVE);
+        if e_indx==numel(e)
+            sendCode(codes.FIX_MOVE);
+        end;
+    end;  
     
     histStop();
 
@@ -118,38 +139,54 @@ function result = ex_activeFixation(e)
     % computer. Maybe we can fix this when we implement a saccade-detection
     % function.
     %
-    if (e.saccadeInitiate > 0) % in case you don't want to have a saccade
-        if waitForMS(e.saccadeInitiate,e.fixX,e.fixY,params.fixWinRad)
+    if (e(1).saccadeInitiate > 0) % in case you don't want to have a saccade
+        if waitForMS(e(1).saccadeInitiate,e(1).fixX,e(1).fixY,params.fixWinRad)
             % didn't leave fixation window
             sendCode(codes.NO_CHOICE);
             msgAndWait('all_off');
             sendCode(codes.FIX_OFF);
-            result = 2;
+            if numel(result)==1
+                result = 2;
+            else
+                result = [result 2];
+            end;
             return;
         end
         
         sendCode(codes.SACCADE);
     end
     
-    if ~waitForFixation(e.saccadeTime,newX,newY,params.targWinRad)
+    if ~waitForFixation(e(1).saccadeTime,newX,newY,params.targWinRad)
         % didn't reach target
         sendCode(codes.NO_CHOICE);
         msgAndWait('all_off');
         sendCode(codes.FIX_OFF);
-        result = 2;
+        if numel(result)==1
+            result = 2;
+        else
+            result = [result 2];
+        end;
         return;
     end
+    elapsed = toc(start);
     
-    if ~waitForMS(e.stayOnTarget,newX,newY,params.targWinRad)
+    if ~waitForMS(e(1).stayOnTarget,newX,newY,params.targWinRad)
         % didn't stay on target long enough
         sendCode(codes.BROKE_TARG)
         msgAndWait('all_off');
         sendCode(codes.FIX_OFF);
-        result = 2;
+        if numel(result)==1
+            result = 2;
+        else
+            result = [result 2];
+        end;
         return;
     end
 
     sendCode(codes.FIXATE);
     sendCode(codes.CORRECT);
     sendCode(codes.FIX_OFF);
-    result = 1;
+    sendCode(codes.REWARD);
+%     giveJuice(floor(2.5*elapsed-1)) %temporary bonus -ACS18Dec2012
+    giveJuice();
+%     result = 1;

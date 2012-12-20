@@ -22,11 +22,18 @@ function result = ex_SaccadeTask(e)
 % saccadeInitiate: maximum time allowed to leave fixation window
 % saccadeTime: maximum time allowed to reach target
 %
-% Last modified:
-% 2012/03/23 by Matt Smith
+% Modified:
+% 2012/10/22 by Matt Smith - update to helperTargetColor and to make it
+% work when multiple 'trials' are passed in 'e'.
+%
+% 2012/11/09 by Matt Smith - update to allow "extraBorder" as an optional
+% parameter in the XML file
 %
 %
+
     global params codes behav;
+
+    e = e(1); %in case more than one 'trial' is passed at a time...
     
     objID = 2;
     
@@ -38,9 +45,15 @@ function result = ex_SaccadeTask(e)
     newY = round(e.distance*sin(theta));
    
     % now figure out if you need to shift the fixation point around so the
-    % saccade will fit on the screen (e.g., for an 'amp' series)
-    extraborder = 10; % keep the dot from ever getting right to the edge of the screen
-    %
+    % saccade will fit on the screen (e.g., for an 'amp' series). The
+    % "extraborder" keeps the dot from ever getting within that many pixels
+    % of the edge of the screen
+    if isfield(e,'extraBorder') 
+        extraborder = e.extraBorder; % use XML file if it's there
+    else
+        extraborder = 10; % default to 10 pixels
+    end
+    
     if (abs(newX) + e.size > (params.slaveWidth/2 - extraborder))
         %disp('X exceeds limit, moving fix pt');
         shiftX = abs(newX) + e.size - params.slaveWidth/2 + extraborder;
@@ -67,6 +80,9 @@ function result = ex_SaccadeTask(e)
     % obj 1 is fix pt, obj 2 is target, diode attached to obj 2
     msg('set 1 oval 0 %i %i %i %i %i %i',[e.fixX e.fixY e.fixRad e.fixColor(1) e.fixColor(2) e.fixColor(3)]);
     msg('set 2 oval 0 %i %i %i %i %i %i',[newX newY e.size e.targetColor(1) e.targetColor(2) e.targetColor(3)]);
+    if isfield(e,'helperTargetColor')
+        msg('set 3 oval 0 %i %i %i %i %i %i',[newX newY e.size e.helperTargetColor(1) e.helperTargetColor(2) e.helperTargetColor(3)]);
+    end
     msg(['diode ' num2str(objID)]);    
     
     msgAndWait('ack');
@@ -81,17 +97,18 @@ function result = ex_SaccadeTask(e)
         msgAndWait('all_off');
         sendCode(codes.FIX_OFF);
         waitForMS(e.noFixTimeout);
-        result = 3;
+        result = codes.IGNORED;
         return;
     end
-
+    sendCode(codes.FIXATE);
+    
     if ~waitForMS(e.targetOnsetDelay,e.fixX,e.fixY,params.fixWinRad)
         % hold fixation before stimulus comes on
         sendCode(codes.BROKE_FIX);
         msgAndWait('all_off');
         sendCode(codes.FIX_OFF);
         waitForMS(e.noFixTimeout);
-        result = 3;
+        result = codes.BROKE_FIX;
         return;
     end
     
@@ -121,7 +138,7 @@ function result = ex_SaccadeTask(e)
             sendCode(codes.TARG_OFF);
             sendCode(codes.FIX_OFF);
             waitForMS(e.noFixTimeout);
-            result = 2;
+            result = codes.BROKE_FIX;
             return;
         end
 
@@ -135,7 +152,7 @@ function result = ex_SaccadeTask(e)
             msgAndWait('all_off');
             sendCode(codes.FIX_OFF);
             waitForMS(e.noFixTimeout);
-            result = 2;
+            result = codes.BROKE_FIX;
             return;
         end
         
@@ -156,7 +173,7 @@ function result = ex_SaccadeTask(e)
             sendCode(codes.TARG_OFF);
             sendCode(codes.FIX_OFF);
             waitForMS(e.noFixTimeout);
-            result = 2;
+            result = codes.BROKE_FIX;
             return;
         end
         
@@ -176,18 +193,24 @@ function result = ex_SaccadeTask(e)
         sendCode(codes.NO_CHOICE);
         msgAndWait('all_off');
         sendCode(codes.FIX_OFF);
-        result = 2;
+        result = codes.NO_CHOICE;
         return;
     end
 
     sendCode(codes.SACCADE);
+
+    if isfield(e,'helperTargetColor')
+        %% turn on a target for guidance if 'helperTargetColor' param is present
+        msg('obj_on 3');
+        sendCode(codes.TARG_ON);
+    end
     
     if ~waitForFixation(e.saccadeTime,newX,newY,params.targWinRad)
         % didn't reach target
         sendCode(codes.NO_CHOICE);
         msgAndWait('all_off');
         sendCode(codes.FIX_OFF);
-        result = 2;
+        result = codes.NO_CHOICE;
         return;
     end
     
@@ -196,14 +219,16 @@ function result = ex_SaccadeTask(e)
         sendCode(codes.BROKE_TARG);
         msgAndWait('all_off');
         sendCode(codes.FIX_OFF);
-        result = 2;
+        result = codes.BROKE_TARG;
         return;
     end
 
     sendCode(codes.FIXATE);
     sendCode(codes.CORRECT);
     sendCode(codes.TARG_OFF);
+    sendCode(codes.REWARD);
+    giveJuice();
     result = 1;
-    
+
     histStop();    
     

@@ -4,12 +4,13 @@ function plotDisplay(obj, ~)
 % called by a timer initiated by runex. plots the current eye position on
 % the screen.  
 
-global calibration wins aio test;
+global calibration wins aio test params traceColor;
 
 r = 5;
+traceColor = [255 0 0]; %so that this can potentially be modified in the future (e.g., to mark saccades) -ACS 31Oct2012
 
 aioV = get(aio, 'UserData');
-set(aio,'UserData',aioV(end,:));
+set(aio,'UserData',aioV(end,:)); 
 
 %aioV = [get(obj,'UserData'); aioV];
 
@@ -30,11 +31,11 @@ aioV = [aioV(1,:)' reshape(repmat(mid,2,1),2,size(mid,2)*2) aioV(end,:)'];
 mid = aioEyes(2:end-1,:)';
 aioEyes = [aioEyes(1,:)' reshape(repmat(mid,2,1),2,size(mid,2)*2) aioEyes(end,:)'];
 
-Screen('DrawLines',wins.voltage,aioV,1,[255 0 0]);
+Screen('DrawLines',wins.voltage,aioV,1,traceColor);
 Screen('CopyWindow',wins.voltage,wins.w,[0 0 wins.voltageSize(3:4)-wins.voltageSize(1:2)],wins.voltageSize);
 Screen('FillOval',wins.w,[255 255 255],[aioV(:,end)' - r aioV(:,end)' + r]+[wins.voltageSize(1:2) wins.voltageSize(1:2)]);
 
-Screen('DrawLines',wins.eye,aioEyes,1,[255 0 0]);
+Screen('DrawLines',wins.eye,aioEyes,1,traceColor);
 Screen('CopyWindow',wins.eye,wins.w,[0 0 wins.eyeSize(3:4)-wins.eyeSize(1:2)],wins.eyeSize);
 Screen('FillOval',wins.w,[255 255 255],[aioEyes(:,end)' - r aioEyes(:,end)' + r]+[wins.eyeSize(1:2) wins.eyeSize(1:2)]);
 

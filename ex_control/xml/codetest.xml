@@ -1,0 +1,19 @@
+<stimulus name="orituning" repeats="10" ex="ex_codetest" bgColor="128 128 128">
+    <conditions type="grating" runline="stimLength orientation phase spatial temporal centerx centery radius contrast">                
+        <spatial>.0481</spatial>
+        <temporal>0</temporal>
+        <radius>128</radius>
+        <contrast>1</contrast>
+        <centerx>300</centerx>
+        <centery>0</centery>
+        <orientation>45</orientation>        
+        <stimulusDuration>40</stimulusDuration>
+    </conditions>
+    <params>
+        <fixX>0</fixX>
+        <fixY>0</fixY>
+        <fixRad>5</fixRad>
+    </params>
+    <randoms>
+    </randoms>
+</stimulus>

@@ -1,0 +1,19 @@
+<stimulus name="fixblank" repeats="10" ex="ex_gazeContingent" bgColor="128 128 128">
+    <conditions type="blank" runline="stimLength">
+        <stimLength>75</stimLength>
+    </conditions>
+    <params>
+        <fixX>0</fixX>
+        <fixY>0</fixY>
+        <fixRad>5</fixRad>
+        <fixColor>[0 0 255]</fixColor>
+        <preStimFix>0</preStimFix>
+        <timeToFix>1000</timeToFix> 
+        <saccadeInitiate>0</saccadeInitiate>
+        <saccadeTime>0</saccadeTime>
+        <stayOnTarget>0</stayOnTarget>
+        <saccadeLength>0</saccadeLength>
+        <noFixTimeout>1000</noFixTimeout>
+        <saccadeDir>0</saccadeDir>
+    </params>
+</stimulus>

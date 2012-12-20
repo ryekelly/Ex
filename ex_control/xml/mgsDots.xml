@@ -1,7 +1,7 @@
 <stimulus name="mgsDots" repeats="40" ex="ex_memoryGuidedSaccadePlusDots" bgColor="0 0 0">
     <conditions>
         <distance>195</distance>
-        <angle>[150 330]</angle>
+        <angle>[90]</angle>
         <size>20</size>
     </conditions>
     <params>
@@ -22,7 +22,7 @@
         
         <ndots>1</ndots>
         <dotsize>3</dotsize>
-        <dwell>15</dwell>
+        <dwell>5</dwell>
         <centerx>0</centerx>
         <centery>0</centery>
         <xradius>512</xradius>

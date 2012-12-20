@@ -1,0 +1,61 @@
+<stimulus name="orituning" repeats="10" ex="ex_driftchoice" bgColor="128 128 128">
+    <conditions type="grating" runline="stimLength orientation phase spatial temporal centerx centery radius contrast">                
+        <phase>0</phase>
+        <spatial>.0235</spatial>
+        <temporal>3</temporal>
+        <radius>40</radius>
+        <contrast>0.75</contrast>
+        <centerx>-70</centerx>
+        <centery>-40</centery>
+        <orientation1>0</orientation1>        
+        <orientation2>90</orientation2> 
+        <stimulusDuration>120</stimulusDuration>
+        <targetDuration>75</targetDuration>
+        <waitAfterTarget>10</waitAfterTarget>
+        <minShortTargetOnset>25</minShortTargetOnset>
+        <maxShortTargetOnset>40</maxShortTargetOnset>
+        <shortLongTrialProportion>0</shortLongTrialProportion>
+        <cueDuration>0.12</cueDuration>
+        <extraReward>2</extraReward>
+    </conditions>
+    <params>
+        <fixX>0</fixX>
+        <fixY>0</fixY>
+        <fixRad>5</fixRad>
+        <helpFixColor>[94 94 162]</helpFixColor>
+        <timeToFix>3000</timeToFix>
+        <stayOnTarget>50</stayOnTarget>
+        <saccadeInitiate>500</saccadeInitiate>
+        <saccadeTime>200</saccadeTime>
+        <saccadeLength>150</saccadeLength>
+        <noFixTimeout>3000</noFixTimeout>
+        <startColor1>[0 0 0]</startColor1>
+        <endColor1>[255 255 255]</endColor1>
+        <startColor2>[0 0 0]</startColor2>
+        <endColor2>[255 255 255]</endColor2>
+        <cmapReso>255</cmapReso>
+        <cueFreq>[1000 440]</cueFreq>
+        <startTargAmp>[0 2]</startTargAmp>
+        <targAmpStep>0.03</targAmpStep>
+        <behavLimits>[0.7 0.8]</behavLimits>
+        <cueMap>1</cueMap>
+        <showHoles>0</showHoles>
+        <visCueBrightness>0.55</visCueBrightness>
+        <visCueRad>20</visCueRad>
+        <numAdjustTrials>20</numAdjustTrials>
+        <retry_WRONG_TARG>0</retry_WRONG_TARG>
+        <retry_NO_CHOICE>0</retry_NO_CHOICE>
+    </params>
+    <randoms>
+        <preStimFix>[300 700]</preStimFix>
+        <isValid>[1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 0]</isValid>
+        <isCatch>[1 1 0 0 0]</isCatch>
+        <cue>[1 2]</cue>
+        <cueAmplitude>[0 1 1 1 1 1 1 1 1]</cueAmplitude>
+        <targAmpPick>[1 2]</targAmpPick>
+        <cueTargetInterval>[300 700]</cueTargetInterval>
+        <colorPick>1</colorPick>
+        <oriPick>[1 2]</oriPick>
+        <posPick>[-1 1]</posPick>
+    </randoms>
+</stimulus>

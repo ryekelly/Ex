@@ -1,0 +1,31 @@
+<stimulus name="fixAndStim_withgrating" repeats="20" ex="ex_fixAndStim_withgrating" bgColor="128 128 128">
+    <conditions>
+        <stimLength>100</stimLength>
+        <orientation>0</orientation>
+        <phase>0</phase>
+        <spatial>.0235</spatial>
+        <temporal>3</temporal>
+        <centerx>-50</centerx>
+        <centery>-20</centery>
+        <radius>40</radius>
+        <contrast>[0 1]</contrast>
+        <microstim>[0 1]</microstim>
+    </conditions>
+    <params>
+        <fixX>0</fixX>
+        <fixY>0</fixY>
+        <fixRad>5</fixRad>
+        <fixColor>[0 0 255]</fixColor>
+        <microStimDur>100</microStimDur>
+        <preStimFix>150</preStimFix>
+        <timeToFix>1000</timeToFix>
+        <noFixTimeout>1000</noFixTimeout>
+        <saccadeInitiate>500</saccadeInitiate>
+        <saccadeTime>200</saccadeTime>
+        <stayOnTarget>150</stayOnTarget>
+        <saccadeLength>150</saccadeLength>
+    </params>
+    <randoms>
+        <saccadeDir>0:359</saccadeDir>
+    </randoms>
+</stimulus>

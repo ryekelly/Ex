@@ -1,8 +1,14 @@
 function result = ex_driftchoice(e)
 % ex file: ex_driftchoice
-
+%
+%
+%
+% Modified:
+%
     global params codes behav allCodes;
      
+    e = e(1); %in case more than one 'trial' is passed at a time...
+    
     %initialize behavior-related stuff:
     if ~isfield(behav,'score')||~isfield(behav,'targAmp')||~isfield(behav,'targPickHistory')
         behav.score = []; 
@@ -16,6 +22,7 @@ function result = ex_driftchoice(e)
     frameMsec = params.slaveFrameTime*1000;
     stimulusDuration = e.stimulusDuration;
     targetDuration = e.targetDuration;
+    waitAfterTarget = e.waitAfterTarget;
     minShortTargetOnset = e.minShortTargetOnset;
     maxShortTargetOnset = e.maxShortTargetOnset;
     minLongTargetOnset = maxShortTargetOnset;
@@ -28,11 +35,15 @@ function result = ex_driftchoice(e)
     startColors = [e.startColor1;e.startColor2];
     endColors = [e.endColor1;e.endColor2];
     orientations = [e.orientation1,e.orientation2];
+    isCatch = e.isCatch;
+    extraReward = e.extraReward;
     
     %Variable stuff:
     targetObject = abs(((1-e.isValid)*3)-e.cue);
     isShortTrial = rand<=shortLongTrialProportion;
-    if isShortTrial
+    if isCatch
+        targetOnset = stimulusDuration+1;
+    elseif isShortTrial
         targetOnset = randi(maxShortTargetOnset-minShortTargetOnset)+minShortTargetOnset;
     else
         targetOnset = randi(maxLongTargetOnset-minLongTargetOnset)+minLongTargetOnset;
@@ -42,6 +53,8 @@ function result = ex_driftchoice(e)
 
     targAmpPick = e.targAmpPick;
     targAmp = behav.targAmp(targAmpPick)*e.temporal;
+    sendStruct(struct('targAmp',targAmp)); %I think this should work, -ACS24Apr2012
+    sendStruct(struct('targOnset',targetOnset)); 
     
     switch e.cueMap
         case 1 %spatial cue
@@ -50,21 +63,26 @@ function result = ex_driftchoice(e)
             distColors = [startColors(colorPick(2),:);endColors(colorPick(2),:)];
             posPick = (1-targetObject)*2+1;
             targX = e.centerx*posPick;
-            targY = e.centery*posPick;
+            targY = e.centery;
             distX = -e.centerx*posPick;
-            distY = -e.centery*posPick;
+            distY = e.centery;
+            cueX = e.centerx*(-2*e.cue+3);
+            cueY = e.centery;  
+            cueColor = fix([255 255 255]*e.visCueBrightness);
         case 2 %featural cue
             targColors = [startColors(targetObject,:);endColors(targetObject,:)];
             distColors = [startColors(3-targetObject,:);endColors(3-targetObject,:)];
             posPick = e.posPick;
             targX = e.centerx*posPick;
-            targY = e.centery*posPick;
+            targY = e.centery;
             distX = -e.centerx*posPick;
-            distY = -e.centery*posPick;
+            distY = -e.centery;
+            cueX = 0; cueY = 0;
+            cueColor = fix(endColors(targetObject,:)*e.visCueBrightness);
         otherwise
             error('driftchoice:unknownCueMap','unknown cue mapping');
     end;
-    orientations = orientations(randperm(numel(orientations))); %randomize orientations (write this out?)
+    orientations = orientations([e.oriPick 3-e.oriPick]); %randomize orientations
 
     msgAndWait('set 5 rgbgrating %i %f %f %f %f %i %i %i %f %i %i %i %i %i %i %i %f %i %i %i',...
         [stimulusDuration  orientations(1) e.phase e.spatial e.temporal targX targY e.radius e.contrast targColors(:)' e.cmapReso,...
@@ -72,6 +90,7 @@ function result = ex_driftchoice(e)
     msgAndWait('set 6 rgbgrating %i %f %f %f %f %i %i %i %f %i %i %i %i %i %i %i %f %i %i %i',...
         [stimulusDuration  orientations(2) e.phase e.spatial e.temporal distX distY e.radius e.contrast distColors(:)' e.cmapReso,...
         e.temporal targetOnset targetPeak targetEnd]);
+    msgAndWait('set 7 oval %i %i %i %i %i %i %i',[floor(cueDuration*1000/frameMsec) cueX cueY e.visCueRad cueColor]);
 
     msgAndWait('set 1 oval 0 %i %i %i %i %i %i',[e.fixX e.fixY e.fixRad 255 255 0]); %constant central fixation (yellow)
     if e.showHoles
@@ -93,10 +112,12 @@ function result = ex_driftchoice(e)
         sendCode(codes.IGNORED);
         msgAndWait('all_off');
         sendCode(codes.FIX_OFF);
-        waitForMS(e.noFixTimeout);
-        result = 3;        
+        waitForMS(1000); % no full time-out in this case
+        result = codes.IGNORED;        
         return;
     end
+    
+    sendCode(codes.FIXATE);
     
     if ~waitForMS(e.preStimFix,e.fixX,e.fixY,params.fixWinRad)
         % hold fixation before stimulus comes on
@@ -104,15 +125,20 @@ function result = ex_driftchoice(e)
         msgAndWait('all_off');
         sendCode(codes.FIX_OFF);
         waitForMS(e.noFixTimeout);
-        result = 3;
+        result = codes.BROKE_FIX;
         return;
     end
     
     %the cue:
     if cueDuration>0
         timebase = 0:1/cueFs:cueDuration;
-        cueSound = feval(cueWin,numel(timebase))'.*sin(2.*pi.*cueFreq(e.cue).*timebase);
+        cueSound = e.cueAmplitude.*feval(cueWin,numel(timebase))'.*sin(2.*pi.*cueFreq(e.cue).*timebase);
+        codeStr = sprintf('STIM%d_ON',e.cue);
         sound(cueSound,cueFs);
+        msgAndWait('obj_on 7');
+        if e.cueAmplitude>0
+            sendCode(codes.(codeStr));
+        end;
     end;
 
     if ~waitForMS(e.cueTargetInterval,e.fixX,e.fixY,params.fixWinRad)
@@ -122,7 +148,7 @@ function result = ex_driftchoice(e)
         sendCode(codes.STIM_OFF);
         sendCode(codes.FIX_OFF);
         waitForMS(e.noFixTimeout);
-        result = 3;
+        result = codes.BROKE_FIX;
         return;
     end   
     
@@ -142,7 +168,7 @@ function result = ex_driftchoice(e)
     hitFlag = false;
     winColors = [0,255,0;255,0,0];
     %require hold fixation until target onset:
-    if ~waitForMS(targetOnset.*frameMsec,e.fixX,e.fixY,params.fixWinRad)
+    if ~waitForMS((targetOnset+waitAfterTarget).*frameMsec,e.fixX,e.fixY,params.fixWinRad)
         % failed to keep fixation
         sendCode(codes.BROKE_FIX);
         msgAndWait('all_off');
@@ -153,7 +179,21 @@ function result = ex_driftchoice(e)
         behav.RT(end+1) = nan;
         adjustTarget(e,targAmpPick);
         waitForMS(e.noFixTimeout);
-        result = 3;
+        result = codes.BROKE_FIX;
+        return;
+    elseif isCatch %Correct withhold to a catch trial:
+        msgAndWait('all_off');
+        sendCode(codes.WITHHOLD);
+        sendCode(codes.STIM_OFF); 
+        sendCode(codes.FIX_OFF);
+        histStop();                 
+        behav.score(end+1) = nan;
+        behav.trialNum(end+1) = length(allCodes);
+        behav.RT(end+1) = nan;
+        adjustTarget(e,targAmpPick);
+        giveJuice(2); % 2 for catch trial
+        sendCode(codes.REWARD);
+        result = codes.WITHHOLD;
         return;
     else
         sendCode(codes.TARG_ON);
@@ -161,12 +201,12 @@ function result = ex_driftchoice(e)
     end;
     
     if e.showHoles
-        choiceWin = waitForFixationChoice((targetPeak-targetOnset).*frameMsec,[targX distX],[targY distY],params.targWinRad.*[1 1],winColors); %note that target window is always '1'
+        choiceWin = waitForFixation((targetPeak-targetOnset).*frameMsec,[targX distX],[targY distY],params.targWinRad.*[1 1],winColors); %note that target window is always '1'
         switch choiceWin
             case 1 %saccade to target
                 if ~waitForMS(e.stayOnTarget,targX,targY,params.targWinRad) %require to stay on for a while, in case the eye 'accidentally' travels through target window
                     % failed to keep fixation
-                    sendCode(codes.BROKE_FIX);
+                    sendCode(codes.BROKE_TARG);
                     msgAndWait('all_off');
                     sendCode(codes.STIM_OFF);
                     sendCode(codes.FIX_OFF);
@@ -175,7 +215,7 @@ function result = ex_driftchoice(e)
                     behav.RT(end+1) = nan;
                     adjustTarget(e,targAmpPick);
                     waitForMS(e.noFixTimeout);
-                    result = 2;
+                    result = codes.BROKE_TARG;
                     return;
                 end;
                 hitFlag = true;
@@ -192,7 +232,7 @@ function result = ex_driftchoice(e)
                 behav.trialNum(end+1) = length(allCodes);
                 behav.RT(end+1) = nan;
                 adjustTarget(e,targAmpPick);
-                result = 2; %change the result code to indicate a wrong choice
+                result = codes.WRONG_TARG; 
     %             fprintf('\nIncorrect Choice'); %for debug purposes
                 return;
             otherwise
@@ -203,25 +243,33 @@ function result = ex_driftchoice(e)
     end    
     
     if ~hitFlag
-        choiceWin = waitForFixationChoice((stimulusDuration-targetOnset).*frameMsec,[targX distX],[targY distY],params.targWinRad.*[1 1],winColors(1:2,:)); %note that target window is always '1'
+        choiceWin = waitForFixation((stimulusDuration-targetOnset).*frameMsec,[targX distX],[targY distY],params.targWinRad.*[1 1],winColors(1:2,:)); %note that target window is always '1'
         %     fprintf('\nChoice:%i, Target:%i',choiceWin,targetObject); %debugging feedback
         switch choiceWin
             case 0
                 % didn't reach target or distracter
-                sendCode(codes.NO_CHOICE);
-                msgAndWait('all_off');
-                sendCode(codes.STIM_OFF);
-                sendCode(codes.FIX_OFF);
-                behav.score(end+1) = nan;
-                behav.trialNum(end+1) = length(allCodes);
-                behav.RT(end+1) = nan;
+                if waitForFixation(1,e.fixX,e.fixY,params.fixWinRad)
+                    sendCode(codes.NO_CHOICE);
+                    msgAndWait('all_off');
+                    behav.score(end+1) = 0;
+                    behav.trialNum(end+1) = length(allCodes);
+                    behav.RT(end+1) = nan;
+                    result = codes.NO_CHOICE;
+                else
+                    msgAndWait('all_off');
+                    sendCode(codes.STIM_OFF);
+                    sendCode(codes.FIX_OFF);
+                    behav.score(end+1) = nan;
+                    behav.trialNum(end+1) = length(allCodes);
+                    behav.RT(end+1) = nan;       
+                    result = codes.BROKE_FIX;
+                end;
                 adjustTarget(e,targAmpPick);
-                result = 2;
                 return;
             case 1 %the target window
                 if ~waitForMS(e.stayOnTarget,targX,targY,params.targWinRad) %require to stay on for a while, in case the eye 'accidentally' travels through target window
                     % failed to keep fixation
-                    sendCode(codes.BROKE_FIX);
+                    sendCode(codes.BROKE_TARG);
                     msgAndWait('all_off');
                     sendCode(codes.STIM_OFF);
                     sendCode(codes.FIX_OFF);
@@ -230,7 +278,7 @@ function result = ex_driftchoice(e)
                     behav.RT(end+1) = nan;
                     adjustTarget(e,targAmpPick);
                     waitForMS(e.noFixTimeout);
-                    result = 2;
+                    result = codes.BROKE_TARG;
                     return;
                 end;
                 sendCode(codes.CORRECT);
@@ -249,7 +297,7 @@ function result = ex_driftchoice(e)
                 behav.trialNum(end+1) = length(allCodes);
                 behav.RT(end+1) = nan;
                 adjustTarget(e,targAmpPick);
-                result = 2; %change the result code to indicate a wrong choice
+                result = codes.WRONG_TARG; %change the result code to indicate a wrong choice
                 return;
         end;
     end;
@@ -261,7 +309,13 @@ function result = ex_driftchoice(e)
     histStop();
                    
     adjustTarget(e,targAmpPick);
-    result = 1;
+    if e.isValid==1
+        giveJuice(1+extraReward); % extra reward for valid corrects, 1 for invalid corrects
+    else
+        giveJuice(1);
+    end
+    sendCode(codes.REWARD);
+    result = codes.CORRECT;
     
 function adjustTarget(e,targAmpPick)
     %Adjust target amplitude based on behavior (and update on-screen
@@ -271,7 +325,7 @@ function adjustTarget(e,targAmpPick)
     if ~e.showHoles %don't adjust if you're just giving the subject the answer
 %         display(behav.targPickHistory);
 %         display(targAmpPick);
-        if sum(~isnan(behav.score(behav.targPickHistory==targAmpPick)))>=e.numAdjustTrials %if there are enough 'completed' trials
+        if ~isnan(behav.score(end))&&sum(~isnan(behav.score(behav.targPickHistory==targAmpPick)))>=e.numAdjustTrials %if there are enough 'completed' trials, and the last trial was 'scorable' (this latter condition keeps it from running down repeatedly)
             trialSubset = behav.score(behav.targPickHistory==targAmpPick&~isnan(behav.score));
             score = mean(trialSubset(end-e.numAdjustTrials+1:end)); 
 %             fprintf('\nScore for adjustment: %f',score);

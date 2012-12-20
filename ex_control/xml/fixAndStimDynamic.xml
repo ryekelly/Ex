@@ -1,0 +1,25 @@
+<stimulus name="fixAndStimDynamic" repeats="25" ex="ex_fixAndStimDynamic" bgColor="128 128 128">
+    <conditions>
+        <fixDuration>800</fixDuration>
+        <vOut>3:6</vOut>
+        <pulseDuration>0.00025</pulseDuration>
+        <trainDuration>0.07</trainDuration>
+    </conditions>
+    <params>
+        <fixX>0</fixX>
+        <fixY>0</fixY>
+        <fixRad>5</fixRad>
+        <fixColor>[0 0 255]</fixColor>
+        <preStimFix>1000</preStimFix>
+        <timeToFix>1000</timeToFix>
+        <noFixTimeout>1000</noFixTimeout>
+        <saccadeInitiate>500</saccadeInitiate>
+        <saccadeTime>200</saccadeTime>
+        <stayOnTarget>150</stayOnTarget>
+        <saccadeLength>150</saccadeLength>
+        <toneWithStim>0</toneWithStim>
+    </params>
+    <randoms>
+        <saccadeDir>0:359</saccadeDir>
+    </randoms>
+</stimulus>

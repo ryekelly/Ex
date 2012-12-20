@@ -1,0 +1,49 @@
+<stimulus name="orituning" repeats="10" ex="ex_driftchoice" bgColor="128 128 128">
+    <conditions type="grating" runline="stimLength orientation phase spatial temporal centerx centery radius contrast">                
+        <phase>0</phase>
+        <spatial>.0481</spatial>
+        <temporal>3.25</temporal>
+        <radius>64</radius>
+        <contrast>.3</contrast>
+        <centerx>-100</centerx>
+        <centery>70</centery>
+        <orientation1>45</orientation1>        
+        <orientation2>135</orientation2> 
+        <stimulusDuration>200</stimulusDuration>
+        <targetDuration>75</targetDuration>
+        <minShortTargetOnset>25</minShortTargetOnset>
+        <maxShortTargetOnset>40</maxShortTargetOnset>
+        <shortLongTrialProportion>0.1</shortLongTrialProportion>
+        <cueDuration>0.12</cueDuration>
+    </conditions>
+    <params>
+        <fixX>0</fixX>
+        <fixY>0</fixY>
+        <fixRad>5</fixRad>
+        <helpFixColor>[0 0 255]</helpFixColor>
+        <preStimFix>150</preStimFix>
+        <timeToFix>1000</timeToFix>
+        <saccadeInitiate>500</saccadeInitiate>
+        <saccadeTime>200</saccadeTime>
+        <stayOnTarget>20</stayOnTarget>
+        <saccadeLength>150</saccadeLength>
+        <noFixTimeout>1000</noFixTimeout>
+        <startColor1>[128 128 128]</startColor1>
+        <endColor1>[128 128 128]</endColor1>
+        <startColor2>[128 128 128]</startColor2>
+        <endColor2>[128 128 128]</endColor2>
+        <cmapReso>255</cmapReso>
+        <cueFreq>[440 1000]</cueFreq>
+        <startTargAmp>[0 3]</startTargAmp>
+        <targAmpStep>0.03</targAmpStep>
+        <behavLimits>[0.7 0.8]</behavLimits>
+        <cueMap>1</cueMap>
+        <showHoles>1</showHoles>
+        <numAdjustTrials>5</numAdjustTrials>
+    </params>
+    <randoms>
+        <isValid>[0 1]</isValid>
+        <cue>[1 2]</cue>
+        <cueTargetInterval>0.5:0.05:0.8</cueTargetInterval>
+    </randoms>
+</stimulus>

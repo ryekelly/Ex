@@ -21,7 +21,7 @@ global calibration aio;
 
         eyePos = eyePos - [fixX fixY];
         
-        if eyePos(1) < -r || eyePos(1) > r || eyePos(2) < -r || eyePos(2) > r
+        if ~gazeIsInWindow(eyePos,r);
             trialSuccess = 0;
             break;
         end

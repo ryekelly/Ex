@@ -1,6 +1,6 @@
 <stimulus name="dirtuning" repeats="40" ex="ex_SaccadeTask" bgColor="0 0 0">
     <conditions>
-        <distance>250</distance>
+        <distance>320</distance>
         <angle>0:45:315</angle>
         <size>15</size>
     </conditions>
@@ -11,10 +11,10 @@
         <fixColor>[0 0 255]</fixColor>
         <targetColor>[255 255 255]</targetColor>
         <timeToFix>1000</timeToFix>
-        <fixDuration>500</fixDuration>
+        <fixDuration>1000</fixDuration>
         <targetDuration>50</targetDuration>
         <noFixTimeout>1000</noFixTimeout>
-        <targetOnsetDelay>500</targetOnsetDelay>
+        <targetOnsetDelay>1000</targetOnsetDelay>
         <saccadeInitiate>500</saccadeInitiate>
         <saccadeTime>200</saccadeTime>
         <stayOnTarget>200</stayOnTarget>

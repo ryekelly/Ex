@@ -1,4 +1,4 @@
-function trialSuccess = waitForMS(t,fixX,fixY,r)
+function trialSuccess = waitForMS(t,fixX,fixY,r,varargin)
 % function success = waitForMS(waitTime,fixX,fixY,r)
 % 
 % ex trial helper function: waits for t ms, checking to ensure that the eye
@@ -10,17 +10,22 @@ function trialSuccess = waitForMS(t,fixX,fixY,r)
 % r: in pixels, the radius of the fixation window
     
 global calibration aio;
-    
-    if nargin == 4
-        drawFixationWindows(fixX,fixY,r);
+
+    if nargin > 4
+        winColors = varargin{1};
+    else
+        winColors = [255 255 0];
+    end;
+    if nargin >= 4
+        drawFixationWindows(fixX,fixY,r,winColors);
     elseif nargin ~=1
-        error('waitForMs can have exactly 1 or exactly 4 input arguments');
+        error('waitForMs can have exactly 1, 4 or 5 input arguments');
     end
     
     trialSuccess = 1;
     tic;
         
-    if nargin == 4         
+    if nargin >= 4         
         while toc * 1000 < t
             d = get(aio,'UserData');
             eyePos(1,1) = [d(end,:) 1] * calibration{3};
@@ -28,7 +33,7 @@ global calibration aio;
 
             eyePos = eyePos - [fixX fixY];
 
-            if eyePos(1) < -r || eyePos(1) > r || eyePos(2) < -r || eyePos(2) > r
+            if ~gazeIsInWindow(eyePos,r);
                 trialSuccess = 0;
                 break;
             end

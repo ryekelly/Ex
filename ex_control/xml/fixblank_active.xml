@@ -1,0 +1,21 @@
+<stimulus name="fixblank" repeats="10" ex="ex_activeFixation" bgColor="128 128 128">
+    <conditions type="blank" runline="stimLength">
+        <stimLength>[100 150 200 250 250 250 300 300 300]</stimLength>
+    </conditions>
+    <params>
+        <fixX>0</fixX>
+        <fixY>0</fixY>
+        <fixRad>5</fixRad>
+        <fixColor>[0 0 255]</fixColor>
+        <preStimFix>150</preStimFix>
+        <timeToFix>1000</timeToFix>
+        <saccadeInitiate>200</saccadeInitiate>
+        <saccadeTime>500</saccadeTime>
+        <stayOnTarget>250</stayOnTarget>
+        <saccadeLength>150</saccadeLength>
+        <noFixTimeout>5000</noFixTimeout>
+    </params>
+    <randoms>
+        <saccadeDir>0:359</saccadeDir>
+    </randoms>
+</stimulus>

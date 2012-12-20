@@ -1,0 +1,21 @@
+function choice = waitForSaccade(waitTime,varargin)
+
+%Notes: this function is in development. Right now, vararg
+
+
+global aio calibration;
+
+startTime = tic;
+while toc(startTime)<=waitTime
+    
+    period = get(aio,'AveragePeriod'); %use the average sampling period as an estimate
+    pt = get(aio,'UserData'); %get position data from aio timer object    
+    posPx(:,1) = padarray(pt,[0 1],1,'post')*calibration{3}; %convert native units to screen pixels
+    posPx(:,2) = padarray(pt,[0 1],1,'post')*calibration{4}; %convert native units to screen pixels
+    posDeg = pix2deg(posPx);
+    z = complex(posDeg(:,1),imag(posDeg(:,2))); %complex-valued representation of eye position
+    dz = diff(z); %first derivative of eye position
+    dzdt = dz./period; %first derivative of eye position with respect to sampling period (velocity)
+    d2zdt2 = diff(dzdt); %second derivative of eye position with respect to sampling period (acceleration)
+    
+end

@@ -3,6 +3,7 @@
         <distance>0</distance>
         <angle>0</angle>
         <size>15</size>
+        
     </conditions>
     <params>
         <fixX>0</fixX>
@@ -11,9 +12,9 @@
         <fixColor>[0 0 255]</fixColor>
         <targetColor>[255 0 100]</targetColor>
         <timeToFix>1000</timeToFix>
-        <fixDuration>1000</fixDuration>
+        <fixDuration>20</fixDuration>
         <targetDuration>0</targetDuration>
-        <noFixTimeout>1000</noFixTimeout>
+        <noFixTimeout>3000</noFixTimeout>
         <targetOnsetDelay>0</targetOnsetDelay>
         <saccadeInitiate>0</saccadeInitiate>
         <saccadeTime>0</saccadeTime>
@@ -21,12 +22,12 @@
         
         <ndots>1</ndots>
         <dotsize>10</dotsize>
-        <dwell>15</dwell>
+        <dwell>1</dwell>
         <centerx>0</centerx>
         <centery>0</centery>
         <xradius>512</xradius>
         <yradius>384</yradius>
-        <colorFEF>[255 255 255]</colorFEF>
+        <colorFEF>[0 0 0]</colorFEF>
     </params>
     <randoms>
         <seed>1:100</seed>
